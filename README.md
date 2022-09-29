@@ -23,3 +23,21 @@
 ├── tsconfig.json
 └── webpack.config.js
 ```
+
+### Quickstart
+```shell
+git clone https://github.com/FlowSquad/vs-code-bpmn-modeler.git
+cd vs-code-bpmn-modeler
+```
+```shell
+npm install
+```
+```shell
+code .
+```
+Open `Extension Host` with `F5` and open the example folder.
+
+##### For development run
+```shell
+npm run webpack-dev
+```
