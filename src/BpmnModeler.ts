@@ -105,6 +105,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
+
             </head>
             <body>
                 <div class="content" id="js-drop-zone">
@@ -127,7 +128,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     </div>
 
                     <div class="canvas" id="js-canvas"></div>
-                    <div id="properties"></div>
+                    <div class="properties-panel-parent" id="js-properties-panel"></div>
                 </div>
               
                 <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
