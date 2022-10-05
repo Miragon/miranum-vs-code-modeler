@@ -155,4 +155,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         return vscode.workspace.applyEdit(edit);
     }
+
+    private saveBPMN() {
+        //bpmnJS.saveXML().then({ xml } => console.log(xml));
+    }
 }
