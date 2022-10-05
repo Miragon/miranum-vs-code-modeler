@@ -11,11 +11,11 @@ var container = $('#js-drop-zone');
 
 var modeler = new BpmnModeler({
   container: '#js-canvas',
-  keyboard: {
-    bindTo: window
-  },
+  // keyboard: {
+  //   bindTo: window
+  // },
   propertiesPanel: {
-    parent: '#properties'
+    parent: '#js-properties-panel'
   },
   additionalModules: [
     BpmnPropertiesPanelModule,
