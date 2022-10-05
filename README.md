@@ -21,7 +21,7 @@
 │   └── types
 │       └── VSCodeApi.ts
 ├── tsconfig.json
-└── webpack.config.js
+└── tsup.config.js
 ```
 
 ### Quickstart
@@ -39,5 +39,5 @@ Open `Extension Host` with `F5` and open the example folder.
 
 ##### For development run
 ```shell
-npm run webpack-dev
+npm run dev
 ```

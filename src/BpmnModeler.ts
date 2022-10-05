@@ -60,27 +60,27 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri) {
 
         const scriptModeler = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'public', 'modeler.js'
+            extensionUri, 'dist', 'resources', 'js', 'app.js'
         ));
 
         const styleReset = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'public', 'css', 'reset.css'
+            extensionUri, 'dist', 'resources', 'css', 'reset.css'
         ));
 
         const styleModeler = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'public', 'css', 'app.css'
+            extensionUri, 'dist', 'resources', 'css', 'app.css'
         ));
 
         const styleDiagram = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'public', 'vendor', 'bpmn-js', 'assets', 'diagram-js.css'
+            extensionUri, 'dist', 'resources', 'css', 'assets', 'diagram-js.css'
         ));
 
         const styleBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'public', 'vendor', 'bpmn-js', 'assets', 'bpmn-js.css'
+            extensionUri, 'dist', 'resources', 'css', 'assets', 'bpmn-js.css'
         ));
 
         const fontBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'public', 'vendor', 'bpmn-js', 'assets', 'bpmn-font', 'css', 'bpmn.css'
+            extensionUri, 'dist', 'resources', 'css', 'assets', 'bpmn-font', 'css', 'bpmn.css'
         ));
 
         const nonce = this.getNonce();
