@@ -1,5 +1,11 @@
 import $ from 'jquery';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
+import {
+  BpmnPropertiesPanelModule,
+  BpmnPropertiesProviderModule,
+} from 'bpmn-js-properties-panel';
+
+const vscode = acquireVsCodeApi();
 
 var container = $('#js-drop-zone');
 
@@ -7,7 +13,14 @@ var modeler = new BpmnModeler({
   container: '#js-canvas',
   keyboard: {
     bindTo: window
-  }
+  },
+  propertiesPanel: {
+    parent: '#properties'
+  },
+  additionalModules: [
+    BpmnPropertiesPanelModule,
+    BpmnPropertiesProviderModule
+  ]
 });
 
 function createNewDiagram(xml) {
@@ -81,9 +94,13 @@ $(function() {
   var exportArtifacts = debounce(async function() {
 
     try {
-
       const { xml } = await modeler.saveXML({ format: true });
       setEncoded(downloadLink, 'diagram.bpmn', xml);
+
+      vscode.postMessage({
+        type: 'updateFromWebview',
+        content: xml 
+      });
     } catch (err) {
 
       console.error('Error happened saving XML: ', err);

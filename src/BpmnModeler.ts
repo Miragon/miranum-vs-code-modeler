@@ -92,7 +92,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <meta charset="utf-8" />
 
                 <meta http-equiv="Content-Security-Policy" content="default-src 'none';
-                    style-src ${webview.cspSource};
+                    style-src ${webview.cspSource} 'unsafe-inline';
                     font-src ${webview.cspSource};
                     script-src 'nonce-${nonce}';"/>
 
@@ -127,9 +127,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     </div>
 
                     <div class="canvas" id="js-canvas"></div>
-              </div>
+                    <div id="properties"></div>
+                </div>
               
-              <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
+                <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
             </body>
             </html>
         `;
@@ -156,7 +157,4 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.workspace.applyEdit(edit);
     }
 
-    private saveBPMN() {
-        //bpmnJS.saveXML().then({ xml } => console.log(xml));
-    }
 }
