@@ -12,7 +12,7 @@
   "activationEvents": [
     "onCustomEditor:bpmn-modeler"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/src/extension.js",
   "contributes": {
     "customEditors": [
       {
@@ -30,9 +30,9 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "package": "webpack --mode production --devtool hidden-source-map",
-    "webpack-dev": "webpack --mode development --watch",
-    "watch": "webpack --mode development",
+    "package": "tsup --env.NODE_ENV production",
+    "dev": "tsup --watch",
+    "watch": "tsup",
     "lint": "eslint src --ext ts"
   },
   "devDependencies": {
@@ -44,18 +44,13 @@
     "@typescript-eslint/parser": "^5.16.0",
     "@vscode/test-electron": "^2.1.3",
     "bpmn-js-properties-panel": "^1.9.0",
-    "copy-webpack-plugin": "^11.0.0",
-    "eslint": "^8.11.0",
-    "glob": "^7.2.0",
-    "mocha": "^9.2.2",
-    "ts-loader": "^9.4.1",
-    "typescript": "^4.5.5",
-    "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
-  },
-  "dependencies": {
     "bpmn-js": "^10.0.0",
     "diagram-js": "^8.9.0",
-    "jquery": "^3.3.1"
+    "eslint": "^8.11.0",
+    "glob": "^7.2.0",
+    "jquery": "^3.3.1",
+    "mocha": "^9.2.2",
+    "tsup": "^6.2.3",
+    "typescript": "^4.5.5"
   }
 }
