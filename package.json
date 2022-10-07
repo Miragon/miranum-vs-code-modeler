@@ -1,8 +1,17 @@
 {
   "name": "vs-code-bpmn-modeler",
-  "displayName": "vs-code-bpmn-modeler",
-  "description": "BPMN Modeler for VS Code.",
+  "displayName": "DigiWF: BPMN Modeler",
+  "description": "Edit bpmn files inside VS Code.",
+  "license": "Apache License 2.0",
   "version": "0.0.1",
+  "publisher": "miragon-gmbh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FlowSquad/vs-code-bpmn-modeler"
+  },
+  "bugs": {
+    "url": "https://github.com/FlowSquad/vs-code-bpmn-modeler/issues"
+  },
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -30,11 +39,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "package": "tsup --env.NODE_ENV production",
-    "dev": "tsup --watch",
-    "watch": "tsup src/extension.ts --dts --external=vscode --sourcemap",
-    "lint": "eslint src --ext ts",
-    "dev-client": "vite build --config ./bpmn-modeler/vite.config.js --watch"
+    "web": "vite build --config web/vite.config.js",
+    "web-dev": "vite build --config web/vite.config.js --watch",
+    "ext": "tsup src/extension.ts --dts --external=vscode --sourcemap",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
   },
   "dependencies": {
     "@bpmn-io/properties-panel": "^0.23.0",

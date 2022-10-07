@@ -10,7 +10,6 @@
 **/*.ts
 
 src/**
-resources/**
 examples/**
 node_modules/**
 

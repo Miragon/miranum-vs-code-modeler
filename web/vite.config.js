@@ -9,7 +9,7 @@ export default defineConfig({
     target: 'es2021',
     commonjsOptions: {transformMixedEsModules: true},
     lib: {
-      entry: 'bpmn-modeler/src/app.js',
+      entry: 'web/src/app.js',
       name: 'test',
       fileName: 'client',
     },
@@ -20,7 +20,7 @@ export default defineConfig({
   plugins: [
     viteStaticCopy({
       targets: [
-        {src: 'resources/css/**', dest: 'assets/css/'},
+        {src: 'web/src/app.css', dest: 'assets/css/'},
         {src: 'node_modules/bpmn-js/dist/assets/bpmn-font', dest: 'assets/'},
         {src: 'node_modules/bpmn-js/dist/assets/*.css', dest: 'assets/css/.'},
         {src: 'node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css', dest: 'assets/css/.'}

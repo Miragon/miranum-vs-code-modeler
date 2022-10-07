@@ -64,7 +64,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         ));
 
         const styleReset = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'css', 'reset.css'
+            extensionUri, 'resources', 'css', 'reset.css'
         ));
 
         const styleModeler = webview.asWebviewUri(vscode.Uri.joinPath(
@@ -112,27 +112,27 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <title>Custom Texteditor Template</title>
             </head>
             <body>
-                <div class="content with-diagram" id="js-drop-zone">
+              <div class="content with-diagram" id="js-drop-zone">
 
-                    <div class="message intro">
-                      <div class="note">
-                        Drop BPMN diagram from your desktop or <a id="js-create-diagram" href>create a new diagram</a> to get started.
-                      </div>
+                <div class="message intro">
+                  <div class="note">
+                    Drop BPMN diagram from your desktop or <a id="js-create-diagram" href>create a new diagram</a> to get started.
+                  </div>
+                </div>
+
+                <div class="message error">
+                  <div class="note">
+                    <p>Ooops, we could not display the BPMN 2.0 diagram.</p>
+
+                    <div class="details">
+                      <span>Import Error Details</span>
+                      <pre></pre>
                     </div>
+                  </div>
+                </div>
 
-                    <div class="message error">
-                      <div class="note">
-                        <p>Ooops, we could not display the BPMN 2.0 diagram.</p>
-
-                        <div class="details">
-                          <span>cause of the problem</span>
-                          <pre></pre>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="canvas" id="js-canvas"></div>
-                    <div class="properties-panel-parent" id="js-properties-panel"></div>
+                <div class="canvas" id="js-canvas"></div>
+                <div class="properties-panel-parent" id="js-properties-panel"></div>
               </div>
               
               <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>

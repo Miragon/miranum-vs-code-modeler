@@ -2,6 +2,9 @@ import $ from 'jquery';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import {BpmnPropertiesPanelModule, BpmnPropertiesProviderModule} from "bpmn-js-properties-panel";
 
+// Only for development. Handled by the extension later.
+import EMPTY_DIAGRAM_XML from '../../examples/test.bpmn?raw';
+
 const container = $('#js-drop-zone');
 
 const modeler = new BpmnModeler({
@@ -46,8 +49,7 @@ async function openDiagram(xml) {
 
 $(function() {
 
-  //const vscode = acquireVsCodeApi();
-  let xml = '';
+  let xml = EMPTY_DIAGRAM_XML;
 
   window.addEventListener('message', (event) => {
     const message = event.data;
