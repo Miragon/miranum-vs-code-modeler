@@ -17,6 +17,7 @@ const modeler = new BpmnModeler({
     BpmnPropertiesProviderModule,
   ],
 });
+container.removeClass('with-diagram');
 
 function createNewDiagram(xml) {
   openDiagram(xml);
@@ -64,7 +65,7 @@ $(function() {
     createNewDiagram(xml);
   });
 
-  var downloadLink = $('#js-download-diagram');
+  const downloadLink = $('#js-download-diagram');
 
   $('.buttons a').click(function(e) {
     if (!$(this).is('.active')) {

@@ -60,27 +60,31 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri) {
 
         const scriptModeler = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'resources', 'js', 'app.js'
+            extensionUri, 'dist', 'client', 'client.mjs'
         ));
 
         const styleReset = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'resources', 'css', 'reset.css'
+            extensionUri, 'dist', 'client', 'assets', 'css', 'reset.css'
         ));
 
         const styleModeler = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'resources', 'css', 'app.css'
+            extensionUri, 'dist', 'client', 'assets', 'css', 'app.css'
         ));
 
         const styleDiagram = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'resources', 'css', 'assets', 'diagram-js.css'
+            extensionUri, 'dist', 'client', 'assets', 'css', 'diagram-js.css'
         ));
 
         const styleBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'resources', 'css', 'assets', 'bpmn-js.css'
+            extensionUri, 'dist', 'client', 'assets', 'css', 'bpmn-js.css'
+        ));
+
+        const stylePanel = webview.asWebviewUri(vscode.Uri.joinPath(
+            extensionUri, 'dist', 'client', 'assets', 'css', 'properties-panel.css'
         ));
 
         const fontBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'resources', 'css', 'assets', 'bpmn-font', 'css', 'bpmn.css'
+            extensionUri, 'dist', 'client', 'assets', 'bpmn-font', 'css', 'bpmn.css'
         ));
 
         const nonce = this.getNonce();
@@ -92,7 +96,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <meta charset="utf-8" />
 
                 <meta http-equiv="Content-Security-Policy" content="default-src 'none';
-                    style-src ${webview.cspSource};
+                    style-src ${webview.cspSource} 'unsafe-inline';
                     font-src ${webview.cspSource};
                     script-src 'nonce-${nonce}';"/>
 
@@ -102,12 +106,13 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <link href="${styleModeler}" rel="stylesheet" type="text/css" />
                 <link href="${styleDiagram}" rel="stylesheet" type="text/css" />
                 <link href="${styleBpmn}" rel="stylesheet" type="text/css" />
+                <link href="${stylePanel}" rel="stylesheet" type="text/css" />
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
             </head>
             <body>
-                <div class="content" id="js-drop-zone">
+                <div class="content with-diagram" id="js-drop-zone">
 
                     <div class="message intro">
                       <div class="note">
@@ -127,6 +132,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     </div>
 
                     <div class="canvas" id="js-canvas"></div>
+                    <div class="properties-panel-parent" id="js-properties-panel"></div>
               </div>
               
               <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
