@@ -2,9 +2,9 @@ import $ from 'jquery';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import {BpmnPropertiesPanelModule, BpmnPropertiesProviderModule} from "bpmn-js-properties-panel";
 
-// Only for development. Handled by the extension later.
-import EMPTY_DIAGRAM_XML from '../../examples/test.bpmn?raw';
+import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
+const vscode = acquireVsCodeApi();
 const container = $('#js-drop-zone');
 
 const modeler = new BpmnModeler({
@@ -23,10 +23,20 @@ const modeler = new BpmnModeler({
 container.removeClass('with-diagram');
 
 function createNewDiagram(xml) {
+
+  if (!xml) {
+    xml = EMPTY_DIAGRAM_XML;
+  }
+
   openDiagram(xml);
 }
 
 async function openDiagram(xml) {
+  vscode.setState({
+    text: xml
+  });
+
+  console.log('openDiagram', xml);
 
   try {
 
@@ -49,56 +59,44 @@ async function openDiagram(xml) {
 
 $(function() {
 
-  let xml = EMPTY_DIAGRAM_XML;
+  const state = vscode.getState();
+  let xml = '';
+
+  if (state) {
+    xml = state.text;
+    openDiagram(xml);
+  } else {
+    xml = EMPTY_DIAGRAM_XML;
+    openDiagram(xml);
+  }
 
   window.addEventListener('message', (event) => {
     const message = event.data;
     switch (message.type) {
       case 'updateFromExtension':
         xml = message.text;
+        createNewDiagram(xml);
         return;
     }
   });
-
-  $('#js-create-diagram').click(function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    createNewDiagram(xml);
-  });
-
-  const downloadLink = $('#js-download-diagram');
-
-  $('.buttons a').click(function(e) {
-    if (!$(this).is('.active')) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  });
-
-  function setEncoded(link, name, data) {
-    const encodedData = encodeURIComponent(data);
-
-    if (data) {
-      link.addClass('active').attr({
-        'href': 'data:application/bpmn20-xml;charset=UTF-8,' + encodedData,
-        'download': name
-      });
-    } else {
-      link.removeClass('active');
-    }
-  }
 
   const exportArtifacts = debounce(async function () {
 
     try {
 
       const {xml} = await modeler.saveXML({format: true});
-      setEncoded(downloadLink, 'diagram.bpmn', xml);
-    } catch (err) {
 
+      vscode.setState({
+        text: xml
+      });
+
+      vscode.postMessage({
+        type: 'updateFromWebview',
+        content: xml
+      });
+
+    } catch (err) {
       console.error('Error happened saving XML: ', err);
-      setEncoded(downloadLink, 'diagram.bpmn', null);
     }
   }, 500);
 
