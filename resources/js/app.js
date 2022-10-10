@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import BpmnModeler from 'bpmn-js/lib/Modeler';
+import BpmnModeler from '/Users/jakobmertl/source/miragon/vs-pluginV1/vs-code-bpmn-modeler/node_modules/bpmn-js/lib/Modeler';
 // import {
 //   BpmnPropertiesPanelModule,
 //   BpmnPropertiesProviderModule,
