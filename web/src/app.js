@@ -1,28 +1,28 @@
 import $ from 'jquery';
-import BpmnModeler from '/Users/jakobmertl/source/miragon/vs-pluginV1/vs-code-bpmn-modeler/node_modules/bpmn-js/lib/Modeler';
-// import {
-//   BpmnPropertiesPanelModule,
-//   BpmnPropertiesProviderModule,
-// } from 'bpmn-js-properties-panel';
-import EMPTY_DIAGRAM_XML from "../../lib/ts/empty.bpmn?raw";
+import BpmnModeler from 'bpmn-js/lib/Modeler';
+import {BpmnPropertiesPanelModule, BpmnPropertiesProviderModule} from "bpmn-js-properties-panel";
+
+// Only for development. Handled by the extension later.
+import EMPTY_DIAGRAM_XML from '../../examples/test.bpmn?raw';
 
 const vscode = acquireVsCodeApi();
 
-var container = $('#js-drop-zone');
+const container = $('#js-drop-zone');
 
-var modeler = new BpmnModeler({
+const modeler = new BpmnModeler({
   container: '#js-canvas',
   keyboard: {
     bindTo: window
   },
-  // propertiesPanel: {
-  //   parent: '#js-properties-panel'
-  // },
-  // additionalModules: [
-  //   BpmnPropertiesPanelModule,
-  //   BpmnPropertiesProviderModule
-  // ]
+  propertiesPanel: {
+    parent: '#js-properties-panel'
+  },
+  additionalModules: [
+    BpmnPropertiesPanelModule,
+    BpmnPropertiesProviderModule,
+  ],
 });
+container.removeClass('with-diagram');
 //const container = modeler.container;
 
 async function openDiagram(xml) {
@@ -96,7 +96,7 @@ $(function() {
     openDiagram(xml);
   });
 
-  var downloadLink = $('#js-download-diagram');
+  const downloadLink = $('#js-download-diagram');
 
   $('.buttons a').click(function(e) {
     if (!$(this).is('.active')) {
@@ -106,7 +106,7 @@ $(function() {
   });
 
   function setEncoded(link, name, data) {
-    var encodedData = encodeURIComponent(data);
+    const encodedData = encodeURIComponent(data);
 
     if (data) {
       link.addClass('active').attr({
@@ -118,7 +118,7 @@ $(function() {
     }
   }
 
-  var exportArtifacts = debounce(async function() {
+  const exportArtifacts = debounce(async function () {
 
     try {
       const { xml } = await modeler.saveXML({ format: true });
@@ -179,7 +179,7 @@ init();
 // helpers //////////////////////
 function debounce(fn, timeout) {
 
-  var timer;
+  let timer;
 
   return function() {
     if (timer) {
