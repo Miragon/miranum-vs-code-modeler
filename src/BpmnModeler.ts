@@ -9,6 +9,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
+    private skipNextUpdatePush = false;
+
     public constructor(
         private readonly context: vscode.ExtensionContext
     ) { }
@@ -22,8 +24,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     public async resolveCustomTextEditor(
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
-        token: vscode.CancellationToken): Promise<void>
-    {
+        token: vscode.CancellationToken
+    ): Promise<void> {
         webviewPanel.webview.options = {
             enableScripts: true
         };
@@ -43,6 +45,17 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 text: document.getText()
             });
         }
+        function loadXML() {
+            webviewPanel.webview.postMessage({
+                type: 'loadXML',
+                text: document.getText()
+            });
+        }
+
+        vscode.workspace.onWillSaveTextDocument(() => {
+            // If the save comes from the document itself, do not send an update message
+            this.skipNextUpdatePush = true;
+        });
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
             if (event.document.uri.toString() === document.uri.toString() && event.contentChanges.length !== 0) {
@@ -54,6 +67,15 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             changeDocumentSubscription.dispose();
         });
 
+        webviewPanel.webview.onDidReceiveMessage((e) => {
+            switch (e.type) {
+              case "updateXML":
+                this.updateTextDocument(document, e.text);
+                return;
+            }
+          });
+
+        loadXML();
         updateWebview();
     }
 
@@ -108,6 +130,16 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
             </head>
             <body>
+                <div class="canvas" id="js-canvas"></div>
+              
+                <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
+            </body>
+            </html>
+        `;
+    }
+    //<div class="properties-panel-parent" id="js-properties-panel"></div>
+
+    /*
                 <div class="content" id="js-drop-zone">
 
                     <div class="message intro">
@@ -128,14 +160,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     </div>
 
                     <div class="canvas" id="js-canvas"></div>
-                    <div class="properties-panel-parent" id="js-properties-panel"></div>
                 </div>
-              
-                <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
-            </body>
-            </html>
-        `;
-    }
+    */
 
     private getNonce(): string {
         let text = '';
