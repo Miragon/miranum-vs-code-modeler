@@ -1,14 +1,26 @@
 import $ from 'jquery';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
+import {BpmnPropertiesPanelModule, BpmnPropertiesProviderModule} from "bpmn-js-properties-panel";
 
-var container = $('#js-drop-zone');
+// Only for development. Handled by the extension later.
+import EMPTY_DIAGRAM_XML from '../../examples/test.bpmn?raw';
 
-var modeler = new BpmnModeler({
+const container = $('#js-drop-zone');
+
+const modeler = new BpmnModeler({
   container: '#js-canvas',
   keyboard: {
     bindTo: window
-  }
+  },
+  propertiesPanel: {
+    parent: '#js-properties-panel'
+  },
+  additionalModules: [
+    BpmnPropertiesPanelModule,
+    BpmnPropertiesProviderModule,
+  ],
 });
+container.removeClass('with-diagram');
 
 function createNewDiagram(xml) {
   openDiagram(xml);
@@ -37,8 +49,7 @@ async function openDiagram(xml) {
 
 $(function() {
 
-  //const vscode = acquireVsCodeApi();
-  let xml = '';
+  let xml = EMPTY_DIAGRAM_XML;
 
   window.addEventListener('message', (event) => {
     const message = event.data;
@@ -56,7 +67,7 @@ $(function() {
     createNewDiagram(xml);
   });
 
-  var downloadLink = $('#js-download-diagram');
+  const downloadLink = $('#js-download-diagram');
 
   $('.buttons a').click(function(e) {
     if (!$(this).is('.active')) {
@@ -66,7 +77,7 @@ $(function() {
   });
 
   function setEncoded(link, name, data) {
-    var encodedData = encodeURIComponent(data);
+    const encodedData = encodeURIComponent(data);
 
     if (data) {
       link.addClass('active').attr({
@@ -78,11 +89,11 @@ $(function() {
     }
   }
 
-  var exportArtifacts = debounce(async function() {
+  const exportArtifacts = debounce(async function () {
 
     try {
 
-      const { xml } = await modeler.saveXML({ format: true });
+      const {xml} = await modeler.saveXML({format: true});
       setEncoded(downloadLink, 'diagram.bpmn', xml);
     } catch (err) {
 
@@ -98,7 +109,7 @@ $(function() {
 // helpers //////////////////////
 function debounce(fn, timeout) {
 
-  var timer;
+  let timer;
 
   return function() {
     if (timer) {
