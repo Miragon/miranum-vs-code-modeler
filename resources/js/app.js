@@ -8,7 +8,7 @@ import EMPTY_DIAGRAM_XML from "../../lib/ts/empty.bpmn?raw";
 
 const vscode = acquireVsCodeApi();
 
-//var container = $('#js-drop-zone');
+var container = $('#js-drop-zone');
 
 var modeler = new BpmnModeler({
   container: '#js-canvas',
@@ -23,30 +23,30 @@ var modeler = new BpmnModeler({
   //   BpmnPropertiesProviderModule
   // ]
 });
-const container = modeler.container;
+//const container = modeler.container;
 
 async function openDiagram(xml) {
-  if (!xml) {
-    await loadDiagram(EMPTY_DIAGRAM_XML);
-    sendChanges();
-  } else {
-    await loadDiagram(xml);
-    vscode.setState({ xml });
-  }
-  vscode.setState({ xml });
+//   if (!xml) {
+//     await loadDiagram(EMPTY_DIAGRAM_XML);
+//     sendChanges();
+//   } else {
+//     await loadDiagram(xml);
+//     vscode.setState({ xml });
+//   }
+//   vscode.setState({ xml });
 
-  // try {
-  //   await modeler.importXML(xml);
-  //   container
-  //     .removeClass('with-error')
-  //     .addClass('with-diagram');
-  // } catch (err) {
-  //   container
-  //     .removeClass('with-diagram')
-  //     .addClass('with-error');
-  //   container.find('.error pre').text(err.message);
-  //   console.error(err);
-  // }
+  try {
+    await modeler.importXML(xml);
+    container
+      .removeClass('with-error')
+      .addClass('with-diagram');
+  } catch (err) {
+    container
+      .removeClass('with-diagram')
+      .addClass('with-error');
+    container.find('.error pre').text(err.message);
+    console.error(err);
+  }
 }
 
 async function loadDiagram(content) {
