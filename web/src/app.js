@@ -32,11 +32,10 @@ function createNewDiagram(xml) {
 }
 
 async function openDiagram(xml) {
+  // Set state when diagram is opened
   vscode.setState({
     text: xml
   });
-
-  console.log('openDiagram', xml);
 
   try {
 
@@ -57,24 +56,21 @@ async function openDiagram(xml) {
   }
 }
 
+// main
 $(function() {
 
   const state = vscode.getState();
-  let xml = '';
-
   if (state) {
-    xml = state.text;
-    openDiagram(xml);
+    openDiagram(state.text);
   } else {
-    xml = EMPTY_DIAGRAM_XML;
-    openDiagram(xml);
+    openDiagram(EMPTY_DIAGRAM_XML);
   }
 
   window.addEventListener('message', (event) => {
     const message = event.data;
     switch (message.type) {
       case 'updateFromExtension':
-        xml = message.text;
+        const xml = message.text;
         createNewDiagram(xml);
         return;
     }
@@ -86,6 +82,7 @@ $(function() {
 
       const {xml} = await modeler.saveXML({format: true});
 
+      // Set state when changes occur
       vscode.setState({
         text: xml
       });
