@@ -26,27 +26,27 @@ container.removeClass('with-diagram');
 //const container = modeler.container;
 
 async function openDiagram(xml) {
-//   if (!xml) {
-//     await loadDiagram(EMPTY_DIAGRAM_XML);
-//     sendChanges();
-//   } else {
-//     await loadDiagram(xml);
-//     vscode.setState({ xml });
-//   }
-//   vscode.setState({ xml });
-
-  try {
-    await modeler.importXML(xml);
-    container
-      .removeClass('with-error')
-      .addClass('with-diagram');
-  } catch (err) {
-    container
-      .removeClass('with-diagram')
-      .addClass('with-error');
-    container.find('.error pre').text(err.message);
-    console.error(err);
+  if (!xml) {
+    await loadDiagram(EMPTY_DIAGRAM_XML);
+    sendChanges();
+  } else {
+    await loadDiagram(xml);
+    vscode.setState({ xml });
   }
+  vscode.setState({ xml });
+
+  // try {
+  //   await modeler.importXML(xml);
+  //   container
+  //     .removeClass('with-error')
+  //     .addClass('with-diagram');
+  // } catch (err) {
+  //   container
+  //     .removeClass('with-diagram')
+  //     .addClass('with-error');
+  //   container.find('.error pre').text(err.message);
+  //   console.error(err);
+  // }
 }
 
 async function loadDiagram(content) {
@@ -67,7 +67,7 @@ function sendChanges() {
 
 function sendUpdateXML(xml) {
   vscode.postMessage({
-    type: "updateXML",
+    type: "updateFromWebview",
     text: xml,
   });
 }

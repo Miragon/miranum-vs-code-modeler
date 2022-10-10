@@ -36,6 +36,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             switch (event.type) {
                 case 'updateFromWebview':
                     this.updateTextDocument(document, event.content);
+                    return;
             }
         });
 
@@ -135,6 +136,17 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             </head>
             <body>
               <div class="content with-diagram" id="js-drop-zone">
+                <div class="canvas" id="js-canvas"></div>
+                <div class="properties-panel-parent" id="js-properties-panel"></div>
+              </div>
+              
+              <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
+            </body>
+            </html>
+        `;
+    }
+    /*
+              <div class="content with-diagram" id="js-drop-zone">
 
                 <div class="message intro">
                   <div class="note">
@@ -156,12 +168,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <div class="canvas" id="js-canvas"></div>
                 <div class="properties-panel-parent" id="js-properties-panel"></div>
               </div>
-              
-              <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
-            </body>
-            </html>
-        `;
-    }
+    */
 
     private getNonce(): string {
         let text = '';
