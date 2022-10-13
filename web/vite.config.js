@@ -20,8 +20,8 @@ export default defineConfig({
   plugins: [
     viteStaticCopy({
       targets: [
-        {src: 'web/src/app.css', dest: 'assets/css/'},
         {src: 'node_modules/bpmn-js/dist/assets/bpmn-font', dest: 'assets/'},
+        {src: 'web/src/app.css', dest: 'assets/css/'},
         {src: 'node_modules/bpmn-js/dist/assets/*.css', dest: 'assets/css/.'},
         {src: 'node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css', dest: 'assets/css/.'}
       ]
