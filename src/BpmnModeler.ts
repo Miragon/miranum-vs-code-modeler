@@ -59,7 +59,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri) {
 
-        const scriptModeler = webview.asWebviewUri(vscode.Uri.joinPath(
+        const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
         ));
 
@@ -67,20 +67,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             extensionUri, 'resources', 'css', 'reset.css'
         ));
 
-        const styleModeler = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'css', 'app.css'
-        ));
-
-        const styleDiagram = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'css', 'diagram-js.css'
-        ));
-
-        const styleBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'css', 'bpmn-js.css'
-        ));
-
-        const stylePanel = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'css', 'properties-panel.css'
+        const styleApp = webview.asWebviewUri(vscode.Uri.joinPath(
+            extensionUri, 'dist', 'client', 'style.css'
         ));
 
         const fontBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
@@ -103,10 +91,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                 
                 <link href="${styleReset}" rel="stylesheet" type="text/css" />
-                <link href="${styleModeler}" rel="stylesheet" type="text/css" />
-                <link href="${styleDiagram}" rel="stylesheet" type="text/css" />
-                <link href="${styleBpmn}" rel="stylesheet" type="text/css" />
-                <link href="${stylePanel}" rel="stylesheet" type="text/css" />
+                <link href="${styleApp}" rel="stylesheet" type="text/css" />
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
@@ -129,7 +114,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <div class="properties-panel-parent" id="js-properties-panel"></div>
               </div>
               
-              <script type="text/javascript" src="${scriptModeler}" nonce="${nonce}"></script>
+              <script type="text/javascript" src="${scriptApp}" nonce="${nonce}"></script>
             </body>
             </html>
         `;

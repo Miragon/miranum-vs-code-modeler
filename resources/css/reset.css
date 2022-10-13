@@ -25,6 +25,10 @@ ul {
 	font-weight: normal;
 }
 
+body {
+	color: black;
+}
+
 img {
 	max-width: 100%;
 	height: auto;
