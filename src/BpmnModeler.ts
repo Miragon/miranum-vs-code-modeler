@@ -24,6 +24,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         webviewPanel: vscode.WebviewPanel,
         token: vscode.CancellationToken): Promise<void>
     {
+        let isUpdateFromWebview = false;
+
         webviewPanel.webview.options = {
             enableScripts: true
         };
@@ -32,21 +34,25 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
-                case 'updateFromWebview':
+                case BpmnModeler.viewType + '.updateFromWebview':
+                    isUpdateFromWebview = true;
                     this.updateTextDocument(document, event.content);
             }
         });
 
         function updateWebview() {
             webviewPanel.webview.postMessage({
-                type: 'updateFromExtension',
+                type: BpmnModeler.viewType + '.updateFromExtension',
                 text: document.getText()
             });
         }
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
             if (event.document.uri.toString() === document.uri.toString() && event.contentChanges.length !== 0) {
-                updateWebview();
+                if (!isUpdateFromWebview) {
+                    updateWebview();
+                }
+                isUpdateFromWebview = false;
             }
         });
 
@@ -85,6 +91,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
                 <meta http-equiv="Content-Security-Policy" content="default-src 'none';
                     style-src ${webview.cspSource} 'unsafe-inline';
+                    img-src ${webview.cspSource} data:;
                     font-src ${webview.cspSource};
                     script-src 'nonce-${nonce}';"/>
 
