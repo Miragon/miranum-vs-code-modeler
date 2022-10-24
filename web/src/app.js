@@ -10,12 +10,18 @@ import '../../node_modules/bpmn-js/dist/assets/bpmn-js.css';
 import '../../node_modules/bpmn-js/dist/assets/diagram-js.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css';
 
+// Propertie Extensions
+import magicPropertiesProviderModule from '../PropertieProvider/provider/index';
+import magicModdleDescriptor from '../PropertieProvider/descriptors/magic';
+
+import {debounce} from 'min-dash';
+
 // Only for developing
 const ENVIROMENTS = {
     Browser: 'browser',
     VsCode: 'vscode'
 };
-const ENV = ENVIROMENTS.VsCode;
+const ENV = ENVIROMENTS.Browser;
 
 const container = $('#js-drop-zone');
 let vscode;
@@ -60,8 +66,12 @@ const modeler = new BpmnModeler({
     },
     additionalModules: [
         BpmnPropertiesPanelModule,
-        BpmnPropertiesProviderModule
-    ]
+        BpmnPropertiesProviderModule,
+        magicPropertiesProviderModule
+    ],
+    moddleExtensions: {
+        magic: magicModdleDescriptor
+    }
 });
 container.removeClass('with-diagram');
 
@@ -156,15 +166,15 @@ $(function () {
 
 
 // helpers //////////////////////
-function debounce(fn, timeout) {
+// function debounce(fn, timeout) {
 
-    let timer;
+//     let timer;
 
-    return function () {
-        if (timer) {
-            clearTimeout(timer);
-        }
+//     return function () {
+//         if (timer) {
+//             clearTimeout(timer);
+//         }
 
-        timer = setTimeout(fn, timeout);
-    };
-}
+//         timer = setTimeout(fn, timeout);
+//     };
+// }
