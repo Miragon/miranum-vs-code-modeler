@@ -1,7 +1,14 @@
 import $ from 'jquery';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
-import {BpmnPropertiesPanelModule, BpmnPropertiesProviderModule} from "bpmn-js-properties-panel";
+import {
+    BpmnPropertiesPanelModule,
+    BpmnPropertiesProviderModule,
+    CamundaPlatformPropertiesProviderModule
+} from "bpmn-js-properties-panel";
+import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
+import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
 
+//default diagram
 import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
 // css
@@ -50,7 +57,6 @@ if (ENV === 'vscode') {
     document.body.appendChild(simulator);
 }
 
-
 const modeler = new BpmnModeler({
     container: '#js-canvas', keyboard: {
         bindTo: document
@@ -60,8 +66,13 @@ const modeler = new BpmnModeler({
     },
     additionalModules: [
         BpmnPropertiesPanelModule,
-        BpmnPropertiesProviderModule
-    ]
+        BpmnPropertiesProviderModule,
+        CamundaPlatformPropertiesProviderModule,
+        CamundaPlatformBehaviors
+    ],
+    moddleExtensions: {
+        camunda: camundaModdleDescriptors
+    }
 });
 container.removeClass('with-diagram');
 
