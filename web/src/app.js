@@ -1,6 +1,12 @@
 import $ from 'jquery';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
-import {BpmnPropertiesPanelModule, BpmnPropertiesProviderModule} from "bpmn-js-properties-panel";
+import {
+    BpmnPropertiesPanelModule,
+    BpmnPropertiesProviderModule,
+    CamundaPlatformPropertiesProviderModule
+} from "bpmn-js-properties-panel";
+import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
+import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
 
 import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
@@ -21,7 +27,7 @@ const ENVIROMENTS = {
     Browser: 'browser',
     VsCode: 'vscode'
 };
-const ENV = ENVIROMENTS.Browser;
+const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let vscode;
@@ -67,9 +73,12 @@ const modeler = new BpmnModeler({
     additionalModules: [
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
+        CamundaPlatformPropertiesProviderModule,
+        CamundaPlatformBehaviors,
         magicPropertiesProviderModule
     ],
     moddleExtensions: {
+        camunda: camundaModdleDescriptors,
         magic: magicModdleDescriptor
     }
 });
@@ -166,15 +175,15 @@ $(function () {
 
 
 // helpers //////////////////////
-// function debounce(fn, timeout) {
+function debounce(fn, timeout) {
 
-//     let timer;
+    let timer;
 
-//     return function () {
-//         if (timer) {
-//             clearTimeout(timer);
-//         }
+    return function () {
+        if (timer) {
+            clearTimeout(timer);
+        }
 
-//         timer = setTimeout(fn, timeout);
-//     };
-// }
+        timer = setTimeout(fn, timeout);
+    };
+}
