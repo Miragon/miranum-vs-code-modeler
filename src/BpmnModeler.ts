@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { TextEditor } from './lib/TextEditor';
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -12,15 +11,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public constructor(
         private readonly context: vscode.ExtensionContext
-    ) {
-        TextEditor.register(this.context);
-        this.context.subscriptions.push(vscode.commands.registerCommand(
-            BpmnModeler.viewType + '.toggleTextEditor',
-            () => {
-                TextEditor.toggle();
-            }
-        )); 
-    }
+    ) {    }
 
     /**
      * Called when the custom editor / source file is opened
@@ -54,7 +45,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 type: BpmnModeler.viewType + '.updateFromExtension',
                 text: document.getText()
             });
-            TextEditor.document = document;
         }
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
