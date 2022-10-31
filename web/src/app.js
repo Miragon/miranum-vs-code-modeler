@@ -32,13 +32,13 @@ const ENVIROMENTS = {
 const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
-// for env === borwser
-let textarea;
-// for env == vscode
 let templates;
 
+// for env === borwser
+let textarea;
+
 if (ENV === 'vscode') {
-    // vscode is set before we load this script
+    // 'vscode' is set before we load this script
     const state = vscode.getState();
     if (state) {
         // here get the files
