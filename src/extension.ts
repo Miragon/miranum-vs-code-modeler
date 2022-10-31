@@ -5,6 +5,8 @@ import {FileSystemScanner} from "./lib/FileSystemScanner";
 export function activate(context: vscode.ExtensionContext) {
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
+
+    // TODO: What should happen with more than one workspaceFolders?
     if (workspaceFolders?.length === 1) {
         const fileSystemScanner = new FileSystemScanner(workspaceFolders[0].uri);
         fileSystemScanner.getElementTemplates()
