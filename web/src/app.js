@@ -30,11 +30,19 @@ const ENVIROMENTS = {
 const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
-let vscode;
+// for env === borwser
 let textarea;
+// for env == vscode
+let templates;
 
 if (ENV === 'vscode') {
-    vscode = acquireVsCodeApi();
+    // vscode is set before we load this script
+    const state = vscode.getState();
+    if (state) {
+        // here get the files
+        templates = JSON.parse(state.files);
+    }
+
 } else if (ENV === 'browser') {
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
@@ -62,30 +70,29 @@ if (ENV === 'vscode') {
     document.body.appendChild(simulator);
 }
 
-function createModeler(files) {
-    return new BpmnModeler({
-        container: '#js-canvas',
-        keyboard: {
-            bindTo: document
-        },
-        propertiesPanel: {
-            parent: '#js-properties-panel'
-        },
-        additionalModules: [
-            BpmnPropertiesPanelModule,
-            BpmnPropertiesProviderModule,
-            CamundaPlatformPropertiesProviderModule,
-            CamundaPlatformBehaviors,
-            ElementTemplatesPropertiesProviderModule
-        ],
-        moddleExtensions: {
-            camunda: camundaModdleDescriptors
-        },
-        elementTemplates: [ files ]
-    });
-}
+const modeler = new BpmnModeler({
+    container: '#js-canvas',
+    keyboard: {
+        bindTo: document
+    },
+    propertiesPanel: {
+        parent: '#js-properties-panel'
+    },
+    additionalModules: [
+        BpmnPropertiesPanelModule,
+        BpmnPropertiesProviderModule,
+        CamundaPlatformPropertiesProviderModule,
+        CamundaPlatformBehaviors,
+        ElementTemplatesPropertiesProviderModule
+    ],
+    moddleExtensions: {
+        camunda: camundaModdleDescriptors
+    },
+    elementTemplates: templates
+});
+container.removeClass('with-diagram');
 
-async function importDiagram(modeler, xml) {
+async function importDiagram(xml) {
 
     if (!xml) {
         xml = EMPTY_DIAGRAM_XML;
@@ -117,62 +124,38 @@ async function importDiagram(modeler, xml) {
     }
 }
 
-async function exportDiagram(modeler) {
+async function exportDiagram() {
     return (await modeler.saveXML({format: true}));
 }
 
 // main
 $(function () {
-    let modeler = createModeler([]);
-
     if (ENV === 'vscode') {
         const state = vscode.getState();
         if (state) {
-            importDiagram(modeler, state.text);
-        } else {
-            importDiagram(modeler);
+            importDiagram(state.text);
         }
-
-        console.log('vscode');
 
         window.addEventListener('message', (event) => {
             const message = event.data;
-            console.log('event', message.type);
             switch (message.type) {
-                case 'bpmn-modeler.initialCall': {
-                    const xml = message.text;
-                    const files = message.files;
-
-
-                    container.removeClass('with-diagram');
-                    const diagram = async () => {
-                        modeler = await createModeler(files);
-                        importDiagram(modeler, xml);
-                    };
-
-                    diagram();
-
-                    return;
-                }
                 case 'bpmn-modeler.updateFromExtension': {
                     const xml = message.text;
-                    importDiagram(modeler, xml);
+                    importDiagram(xml);
                     return;
                 }
             }
-
         });
 
     } else if (ENV === 'browser') {
-        modeler = createModeler([]);
-        importDiagram(modeler);
+        importDiagram();
     }
 
-    const updateExtension = debounce(async function (modeler) {
+    const updateExtension = debounce(async function () {
 
         try {
 
-            exportDiagram(modeler)
+            exportDiagram()
                 .then((content) => {
                     if (ENV === 'vscode') {
                         // Set state when changes occur
