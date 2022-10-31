@@ -8,6 +8,7 @@ import {
 } from "bpmn-js-properties-panel";
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
+import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
 
 //default diagram
 import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
@@ -18,6 +19,7 @@ import '../../node_modules/bpmn-js/dist/assets/bpmn-js.css';
 import '../../node_modules/bpmn-js/dist/assets/diagram-js.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
+import '../../node_modules/@bpmn-io/element-template-chooser/dist/element-template-chooser.css';
 
 // element templates
 import sendMail from '../../examples/element-templates/mail-task-template.json';
@@ -44,6 +46,8 @@ if (ENV === 'vscode') {
     }
 
 } else if (ENV === 'browser') {
+    templates = [sendMail];
+
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
     const style = document.createElement('style');
@@ -82,8 +86,9 @@ const modeler = new BpmnModeler({
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
         CamundaPlatformPropertiesProviderModule,
-        CamundaPlatformBehaviors,
-        ElementTemplatesPropertiesProviderModule
+        ElementTemplatesPropertiesProviderModule,
+        ElementTemplateChooserModule,
+        CamundaPlatformBehaviors
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors
