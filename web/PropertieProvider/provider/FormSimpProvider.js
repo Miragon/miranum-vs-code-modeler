@@ -1,12 +1,8 @@
-// Import your custom property entries.
-// The entry is a text input field with logic attached to create,
-// update and delete the "spell" property.
 import spellProps from './parts/SpellProps';
-
-import { is } from 'bpmn-js/lib/util/ModelUtil';
+import {is} from 'bpmn-js/lib/util/ModelUtil';
+//import * from 'public/translations/default/english.json';
 
 const LOW_PRIORITY = 500;
-
 
 /**
  * A provider with a `#getGroups(element)` method
@@ -42,7 +38,6 @@ export default function FormSimpProvider(propertiesPanel, translate) {
       if(is(element, 'bpmn:Process')) {
         groups.push(createFormGroup(element, translate));
       }
-
       return groups;
     };
   };
@@ -60,13 +55,9 @@ FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
 
 // Create the custom form group
 function createFormGroup(element, translate) {
-
-  // create a group called "Formsimplifier".
-  const formGroup = {
+  return {
     id: 'formSimp',
-    label: translate('Formsimplifier'),
+    label: translate('Formsimplifier.label'),
     entries: spellProps(element)
   };
-
-  return formGroup;
 }
