@@ -1,8 +1,10 @@
-import { SelectEntry, isSelectEntryEdited } from '@bpmn-io/properties-panel';
+import {SelectEntry, isSelectEntryEdited} from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
 
 // import hooks from the vendored preact package
 import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import {getBusinessObject, is} from "bpmn-js/lib/util/ModelUtil";
+
 
 export default function(element) {
 
@@ -57,15 +59,24 @@ function Spell(props) {
     ];
   };
 
-  //should be a custom HTML element
-  return `<SelectEntry
-    id={ id }
-    element={ element }
-    description={ translate('Apply a black magic spell') }
-    label={ translate('Spell') }
-    getValue={ getValue }
-    setValue={ setValue }
-    getOptions={ getOptions }
-    debounce={ debounce }
-    />`;
+  return SelectEntry({
+    element,
+    id: 'formType',
+    label: translate('Choose your Form'),
+    getValue,
+    setValue,
+    getOptions
+  });
+
+  //Original example:
+  // return `<TextFieldEntry
+  //   id={ id }
+  //   element={ element }
+  //   description={ translate('Choose your form') }
+  //   label={ translate('Spell') }
+  //   getValue={ getValue }
+  //   setValue={ setValue }
+  //   getOptions={ getOptions }
+  //   debounce={ debounce }
+  //   />`;
 }

@@ -8,9 +8,9 @@
   "associations": [],
   "types": [
     {
-      "name": "BewitchedStartEvent",
+      "name": "Formsimplifier",
       "extends": [
-        "bpmn:StartEvent"
+        "bpmn:Process"
       ],
       "properties": [
         {

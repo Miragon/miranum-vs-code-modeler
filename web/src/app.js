@@ -5,10 +5,12 @@ import {
     BpmnPropertiesProviderModule,
     CamundaPlatformPropertiesProviderModule
 } from "bpmn-js-properties-panel";
+
+// Propertie Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
-
-import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
+import formSimpProviderModule from '../PropertieProvider/provider/index';
+import FormSimpDescriptor from '../PropertieProvider/descriptors/formSimp';
 
 // css
 import './app.css';
@@ -16,18 +18,16 @@ import '../../node_modules/bpmn-js/dist/assets/bpmn-js.css';
 import '../../node_modules/bpmn-js/dist/assets/diagram-js.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css';
 
-// Propertie Extensions
-import magicPropertiesProviderModule from '../PropertieProvider/provider/index';
-import magicModdleDescriptor from '../PropertieProvider/descriptors/magic';
+import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
-import {debounce} from 'min-dash';
+//import {debounce} from 'min-dash';
 
 // Only for developing
 const ENVIROMENTS = {
     Browser: 'browser',
     VsCode: 'vscode'
 };
-const ENV = ENVIROMENTS.VsCode;
+const ENV = ENVIROMENTS.Browser;
 
 const container = $('#js-drop-zone');
 let vscode;
@@ -75,11 +75,11 @@ const modeler = new BpmnModeler({
         BpmnPropertiesProviderModule,
         CamundaPlatformPropertiesProviderModule,
         CamundaPlatformBehaviors,
-        magicPropertiesProviderModule
+        formSimpProviderModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors,
-        magic: magicModdleDescriptor
+        formSimplifier: FormSimpDescriptor
     }
 });
 container.removeClass('with-diagram');

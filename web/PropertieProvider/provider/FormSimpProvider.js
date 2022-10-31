@@ -15,7 +15,7 @@ const LOW_PRIORITY = 500;
  * @param {PropertiesPanel} propertiesPanel
  * @param {Function} translate
  */
-export default function MagicPropertiesProvider(propertiesPanel, translate) {
+export default function FormSimpProvider(propertiesPanel, translate) {
 
   // API ////////
 
@@ -38,9 +38,9 @@ export default function MagicPropertiesProvider(propertiesPanel, translate) {
      */
     return function(groups) {
 
-      // Add the "magic" group
-      if(is(element, 'bpmn:StartEvent')) {
-        groups.push(createMagicGroup(element, translate));
+      // Add the "form" group
+      if(is(element, 'bpmn:Process')) {
+        groups.push(createFormGroup(element, translate));
       }
 
       return groups;
@@ -50,23 +50,23 @@ export default function MagicPropertiesProvider(propertiesPanel, translate) {
 
   // registration ////////
 
-  // Register our custom magic properties provider.
+  // Register our custom form properties provider.
   // Use a lower priority to ensure it is loaded after
   // the basic BPMN properties.
   propertiesPanel.registerProvider(LOW_PRIORITY, this);
 }
 
-MagicPropertiesProvider.$inject = [ 'propertiesPanel', 'translate' ];
+FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
 
-// Create the custom magic group
-function createMagicGroup(element, translate) {
+// Create the custom form group
+function createFormGroup(element, translate) {
 
-  // create a group called "Magic properties".
-  const magicGroup = {
-    id: 'magic',
-    label: translate('Magic properties'),
+  // create a group called "Formsimplifier".
+  const formGroup = {
+    id: 'formSimp',
+    label: translate('Formsimplifier'),
     entries: spellProps(element)
   };
 
-  return magicGroup;
+  return formGroup;
 }
