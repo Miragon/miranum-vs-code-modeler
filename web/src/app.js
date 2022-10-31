@@ -3,7 +3,8 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 import {
     BpmnPropertiesPanelModule,
     BpmnPropertiesProviderModule,
-    CamundaPlatformPropertiesProviderModule
+    CamundaPlatformPropertiesProviderModule,
+    ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
@@ -16,6 +17,10 @@ import './app.css';
 import '../../node_modules/bpmn-js/dist/assets/bpmn-js.css';
 import '../../node_modules/bpmn-js/dist/assets/diagram-js.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css';
+import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
+
+// element templates
+import sendMail from '../../examples/element-templates/mail-task-template.json';
 
 // Only for developing
 const ENVIROMENTS = {
@@ -58,7 +63,8 @@ if (ENV === 'vscode') {
 }
 
 const modeler = new BpmnModeler({
-    container: '#js-canvas', keyboard: {
+    container: '#js-canvas',
+    keyboard: {
         bindTo: document
     },
     propertiesPanel: {
@@ -68,11 +74,13 @@ const modeler = new BpmnModeler({
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
         CamundaPlatformPropertiesProviderModule,
-        CamundaPlatformBehaviors
+        CamundaPlatformBehaviors,
+        ElementTemplatesPropertiesProviderModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors
-    }
+    },
+    elementTemplates: [ sendMail ]
 });
 container.removeClass('with-diagram');
 
