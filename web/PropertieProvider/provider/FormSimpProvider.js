@@ -1,8 +1,9 @@
 import spellProps from './parts/SpellProps';
 import {is} from 'bpmn-js/lib/util/ModelUtil';
-//import * from 'public/translations/default/english.json';
+//import { useTranslation } from "react-i18next";
 
 const LOW_PRIORITY = 500;
+//const { t } = useTranslation("default");
 
 /**
  * A provider with a `#getGroups(element)` method
@@ -57,7 +58,7 @@ FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
 function createFormGroup(element, translate) {
   return {
     id: 'formSimp',
-    label: translate('Formsimplifier.label'),
+    label: translate('Form simplifier'),
     entries: spellProps(element)
   };
 }

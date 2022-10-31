@@ -3,8 +3,6 @@ import { useService } from 'bpmn-js-properties-panel';
 
 // import hooks from the vendored preact package
 import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
-import {getBusinessObject, is} from "bpmn-js/lib/util/ModelUtil";
-
 
 export default function(element) {
 
@@ -44,6 +42,7 @@ function Spell(props) {
         .then(res => res.json())
         .then(spellbook => setSpells(spellbook))
         .catch(error => console.error(error));
+      //create JSON that contains all Form names & display
     }
 
     fetchSpells();
@@ -52,16 +51,16 @@ function Spell(props) {
   const getOptions = () => {
     return [
       { label: '<none>', value: undefined },
-      ...spells.map(spell => ({
-        label: spell,
-        value: spell
+      ...spells.map(form => ({
+        label: form,
+        value: form
       }))
     ];
   };
 
   return SelectEntry({
     element,
-    id: 'formType',
+    id: {id},
     label: translate('Choose your Form'),
     getValue,
     setValue,
