@@ -11,40 +11,38 @@ export class FileSystemScanner {
 
     public getElementTemplates() {
         const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
-
-        const json = FileSystemScanner.fs.readDirectory(uri)
-            .then((files) => {
-                files.forEach((file) => {
-                    const fileUri = vscode.Uri.joinPath(uri, file[0]);
-                    return FileSystemScanner.fs.readFile(fileUri)
-                        .then((content) => {
-                            return Buffer.from(content).toString('utf-8');
-                        });
-                });
-            });
-
-
-        const printJson = async () => {
-            const a = await  json;
-            console.log('getElementTemplates', a);
-        };
-
-        printJson();
+        return this.getJson(this.readFile(uri));
     }
 
-    /*
-    private readFile(directory: vscode.Uri): Thenable<string> {
-        FileSystemScanner.fs.readDirectory(directory)
+    public getForms() {
+        const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
+        return this.getJson(this.readFile(uri));
+    }
+
+    private getJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
+        return thenable
+            .then((results) => {
+                const elementTemplates: Array<JSON> = [];
+                results.forEach((result) => {
+                    elementTemplates.push(JSON.parse(result));
+                });
+                return elementTemplates;
+            });
+
+    }
+
+    private readFile(directory: vscode.Uri): Thenable<Awaited<string>[]> {
+        return FileSystemScanner.fs.readDirectory(directory)
             .then((files) => {
+                const promises: Array<Thenable<string>> = [];
                 files.forEach((file) => {
                     const fileUri = vscode.Uri.joinPath(directory, file[0]);
-                    FileSystemScanner.fs.readFile(fileUri)
+                    promises.push(FileSystemScanner.fs.readFile(fileUri)
                         .then((content) => {
-                            const jsonString Buffer.from(content).toString('utf-8');
-                            console.log(jsonString)
-                        });
+                            return Buffer.from(content).toString('utf-8');
+                        }));
                 });
+                return Promise.all(promises);
             });
     }
-    */
 }

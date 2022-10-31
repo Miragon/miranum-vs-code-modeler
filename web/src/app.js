@@ -62,29 +62,30 @@ if (ENV === 'vscode') {
     document.body.appendChild(simulator);
 }
 
-const modeler = new BpmnModeler({
-    container: '#js-canvas',
-    keyboard: {
-        bindTo: document
-    },
-    propertiesPanel: {
-        parent: '#js-properties-panel'
-    },
-    additionalModules: [
-        BpmnPropertiesPanelModule,
-        BpmnPropertiesProviderModule,
-        CamundaPlatformPropertiesProviderModule,
-        CamundaPlatformBehaviors,
-        ElementTemplatesPropertiesProviderModule
-    ],
-    moddleExtensions: {
-        camunda: camundaModdleDescriptors
-    },
-    elementTemplates: [ sendMail ]
-});
-container.removeClass('with-diagram');
+function createModeler(files) {
+    return new BpmnModeler({
+        container: '#js-canvas',
+        keyboard: {
+            bindTo: document
+        },
+        propertiesPanel: {
+            parent: '#js-properties-panel'
+        },
+        additionalModules: [
+            BpmnPropertiesPanelModule,
+            BpmnPropertiesProviderModule,
+            CamundaPlatformPropertiesProviderModule,
+            CamundaPlatformBehaviors,
+            ElementTemplatesPropertiesProviderModule
+        ],
+        moddleExtensions: {
+            camunda: camundaModdleDescriptors
+        },
+        elementTemplates: [ files ]
+    });
+}
 
-async function importDiagram(xml) {
+async function importDiagram(modeler, xml) {
 
     if (!xml) {
         xml = EMPTY_DIAGRAM_XML;
@@ -116,40 +117,62 @@ async function importDiagram(xml) {
     }
 }
 
-async function exportDiagram() {
+async function exportDiagram(modeler) {
     return (await modeler.saveXML({format: true}));
 }
 
 // main
 $(function () {
+    let modeler = createModeler([]);
 
     if (ENV === 'vscode') {
         const state = vscode.getState();
         if (state) {
-            importDiagram(state.text);
+            importDiagram(modeler, state.text);
         } else {
-            importDiagram();
+            importDiagram(modeler);
         }
+
+        console.log('vscode');
 
         window.addEventListener('message', (event) => {
             const message = event.data;
+            console.log('event', message.type);
             switch (message.type) {
-                case 'bpmn-modeler.updateFromExtension':
+                case 'bpmn-modeler.initialCall': {
                     const xml = message.text;
-                    importDiagram(xml);
+                    const files = message.files;
+
+
+                    container.removeClass('with-diagram');
+                    const diagram = async () => {
+                        modeler = await createModeler(files);
+                        importDiagram(modeler, xml);
+                    };
+
+                    diagram();
+
                     return;
+                }
+                case 'bpmn-modeler.updateFromExtension': {
+                    const xml = message.text;
+                    importDiagram(modeler, xml);
+                    return;
+                }
             }
+
         });
 
     } else if (ENV === 'browser') {
-        importDiagram();
+        modeler = createModeler([]);
+        importDiagram(modeler);
     }
 
-    const updateExtension = debounce(async function () {
+    const updateExtension = debounce(async function (modeler) {
 
         try {
 
-            exportDiagram()
+            exportDiagram(modeler)
                 .then((content) => {
                     if (ENV === 'vscode') {
                         // Set state when changes occur

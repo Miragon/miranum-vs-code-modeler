@@ -4,13 +4,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = 'bpmn-modeler';
 
-    public static register(context: vscode.ExtensionContext): vscode.Disposable {
-        const provider = new BpmnModeler(context);
+    public static register(context: vscode.ExtensionContext, files: Array<JSON>): vscode.Disposable {
+        const provider = new BpmnModeler(context, files);
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
     public constructor(
-        private readonly context: vscode.ExtensionContext
+        private readonly context: vscode.ExtensionContext,
+        private readonly files: Array<JSON>
     ) { }
 
     /**
@@ -40,17 +41,30 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             }
         });
 
-        function updateWebview() {
-            webviewPanel.webview.postMessage({
-                type: BpmnModeler.viewType + '.updateFromExtension',
-                text: document.getText()
-            });
-        }
+        const updateWebview = (type: string) => {
+            switch (type) {
+                case 'initialCall': {
+                    webviewPanel.webview.postMessage({
+                        type: BpmnModeler.viewType + '.' + type,
+                        text: document.getText(),
+                        files: this.files
+                    });
+                    break;
+                }
+                case 'updateFromExtension': {
+                    webviewPanel.webview.postMessage({
+                        type: BpmnModeler.viewType + '.' + type,
+                        text: document.getText()
+                    });
+                    break;
+                }
+            }
+        };
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
             if (event.document.uri.toString() === document.uri.toString() && event.contentChanges.length !== 0) {
                 if (!isUpdateFromWebview) {
-                    updateWebview();
+                    updateWebview('updateFromExtension');
                 }
                 isUpdateFromWebview = false;
             }
@@ -60,7 +74,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             changeDocumentSubscription.dispose();
         });
 
-        updateWebview();
+        updateWebview('initialCall');
     }
 
     private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri) {
