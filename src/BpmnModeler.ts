@@ -4,14 +4,15 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = 'bpmn-modeler';
 
-    public static register(context: vscode.ExtensionContext, files: Array<JSON>): vscode.Disposable {
-        const provider = new BpmnModeler(context, files);
+    public static register(context: vscode.ExtensionContext, files: Array<JSON>[]): vscode.Disposable {
+        const provider = new BpmnModeler(context, files[0], files[1]);
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
     public constructor(
         private readonly context: vscode.ExtensionContext,
-        private readonly files: Array<JSON>
+        private readonly elementTemplates: Array<JSON>,
+        private readonly forms: Array<JSON>
     ) { }
 
     /**
@@ -31,7 +32,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             enableScripts: true
         };
 
-        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, this.files);
+        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, this.elementTemplates, this.forms);
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
@@ -64,7 +65,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         updateWebview();
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, files: Array<JSON>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, elementTemplates: Array<JSON>, forms: Array<JSON>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -126,7 +127,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 const vscode = acquireVsCodeApi();
                 vscode.setState({
                   // TODO: serialize the xml (document.getText()) and set as text property
-                  files: '${JSON.stringify(files)}'    // serialize files-Array
+                  templates: '${JSON.stringify(elementTemplates)}',    // serialize files-Array
+                  forms: '${JSON.stringify(forms)}'
                 });
               </script>
               <script type="text/javascript" src="${scriptApp}" nonce="${nonce}"></script>
@@ -135,6 +137,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         `;
     }
 
+    //     -----------------------------HELPERS-----------------------------     \\
     private getNonce(): string {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -155,4 +158,18 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         return vscode.workspace.applyEdit(edit);
     }
+
+    // //geht hier static? - sonst wird gemozt
+    // private static unpackForms(files: Array<JSON>): Map<string,JSON> {
+    //     let map = new Map<string,JSON>();
+    //     files.forEach((result) => {
+    //         const tmp = JSON.stringify(result);
+    //         if(tmp.includes('{"key":"')) {
+    //             const start = tmp.indexOf('{"key":"') + 8;
+    //             const end = tmp.indexOf('","schema":{"type":');
+    //             map.set(tmp.substring(start, end), result);
+    //         }
+    //     });
+    //     return map;
+    // }
 }

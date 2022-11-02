@@ -37,6 +37,7 @@ const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let templates;
+let forms;
 
 // for env === borwser
 let textarea;
@@ -46,11 +47,13 @@ if (ENV === 'vscode') {
     const state = vscode.getState();
     if (state) {
         // here get the files
-        templates = JSON.parse(state.files);
+        templates = JSON.parse(state.elementTemplates);
+        forms = unpackForms(JSON.parse(state.forms));
     }
 
 } else if (ENV === 'browser') {
     templates = [sendMail];
+    //??forms??
 
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
@@ -203,4 +206,17 @@ function debounce(fn, timeout) {
 
         timer = setTimeout(fn, timeout);
     };
+}
+
+function unpackForms(forms){
+    let map = Map;
+    forms.forEach((result) => {
+        const tmp = JSON.stringify(result);
+        if(tmp.includes('{"key":"')) {
+            const start = tmp.indexOf('{"key":"') + 8;
+            const end = tmp.indexOf('","schema":{"type":');
+            map.set(tmp.substring(start, end), result);
+        }
+    });
+    return map;
 }

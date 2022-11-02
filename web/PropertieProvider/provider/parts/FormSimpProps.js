@@ -8,15 +8,15 @@ export default function(element) {
 
   return [
     {
-      id: 'spell',
+      id: 'form',
       element,
-      component: Spell,
+      component: Form,
       isEdited: isSelectEntryEdited
     }
   ];
 }
 
-function Spell(props) {
+function Form(props) {
   const { element, id } = props;
 
   const modeling = useService('modeling');
@@ -25,33 +25,34 @@ function Spell(props) {
 
 
   const getValue = () => {
-    return element.businessObject.spell || '';
+    return element.businessObject.form || '';
   };
 
   const setValue = value => {
     return modeling.updateProperties(element, {
-      spell: value
+      form: value
     });
   };
 
-  const [ spells, setSpells ] = useState([]);
+  const [ forms, setForms ] = useState([]);
 
   useEffect(() => {
     function fetchForms() {
       fetch('http://localhost:1234/spell')
         .then(res => res.json())
-        .then(spellbook => setSpells(spellbook))
+        .then(forms => setForms(forms))
         .catch(error => console.error(error));
       //create JSON that contains all Form names & display
+      //setForms(forms);
     }
 
     fetchForms();
-  }, [ setSpells ]);
+  }, [ setForms ]);
 
   const getOptions = () => {
     return [
       { label: '<none>', value: undefined },
-      ...spells.map(form => ({
+      ...forms.map(form => ({
         label: form,
         value: form
       }))
@@ -64,7 +65,8 @@ function Spell(props) {
     label: translate('Choose your Form'),
     getValue,
     setValue,
-    getOptions
+    getOptions,
+    debounce
   });
 
   //Original example:
@@ -72,7 +74,7 @@ function Spell(props) {
   //   id={ id }
   //   element={ element }
   //   description={ translate('Choose your form') }
-  //   label={ translate('Spell') }
+  //   label={ translate('Form') }
   //   getValue={ getValue }
   //   setValue={ setValue }
   //   getOptions={ getOptions }

@@ -10,13 +10,11 @@ export function activate(context: vscode.ExtensionContext) {
     if (workspaceFolders?.length === 1) {
         const fileSystemScanner = new FileSystemScanner(workspaceFolders[0].uri);
         fileSystemScanner.getElementTemplates()
-            .then((results) => {
-                context.subscriptions.push(BpmnModeler.register(context, results));
-            });
-        fileSystemScanner.getForms()
-            .then((results) => {
-                console.log(results);
-                //context.subscriptions.push(BpmnModeler.register(context, results))
+            .then((elementTemplates) => {
+                fileSystemScanner.getForms()
+                    .then((forms) => {
+                        context.subscriptions.push(BpmnModeler.register(context, [elementTemplates, forms]));
+                    });
             });
     }
 }

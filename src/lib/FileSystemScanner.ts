@@ -20,21 +20,9 @@ export class FileSystemScanner {
     /**
      * Get forms from the current working directory
      */
-    public getForms(): Thenable<Awaited<[string, JSON]>[]> {
+    public getForms(): Thenable<Array<JSON>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getResultAsJson(this.readFile(uri))
-            .then((results) => {
-                let map = new Map<string, JSON>();
-                results.forEach((result) => {
-                    const tmp = JSON.stringify(result);
-                    if(tmp.includes('{"key":"')) {
-                        const start = tmp.indexOf('{"key":"') + 8;
-                        const end = tmp.indexOf('","schema":{"type":');
-                        map.set(tmp.substring(start, end), result);
-                    }
-                });
-                return Promise.all(map);
-            });
+        return this.getResultAsJson(this.readFile(uri));
     }
 
 
