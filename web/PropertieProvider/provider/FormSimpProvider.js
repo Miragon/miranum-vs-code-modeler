@@ -1,4 +1,4 @@
-import spellProps from './parts/SpellProps';
+import formSimpProps from './parts/FormSimpProps';
 import {is} from 'bpmn-js/lib/util/ModelUtil';
 //import { useTranslation } from "react-i18next";
 
@@ -59,6 +59,6 @@ function createFormGroup(element, translate) {
   return {
     id: 'formSimp',
     label: translate('Form simplifier'),
-    entries: spellProps(element)
+    entries: formSimpProps(element)
   };
 }

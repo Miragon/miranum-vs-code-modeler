@@ -1,7 +1,7 @@
 {
-  "name": "Magic",
-  "prefix": "magic",
-  "uri": "http://magic",
+  "name": "FormSimplifier",
+  "prefix": "formsimp",
+  "uri": "http://formsimp",
   "xml": {
     "tagAlias": "lowerCase"
   },

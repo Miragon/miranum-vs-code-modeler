@@ -37,7 +37,7 @@ function Spell(props) {
   const [ spells, setSpells ] = useState([]);
 
   useEffect(() => {
-    function fetchSpells() {
+    function fetchForms() {
       fetch('http://localhost:1234/spell')
         .then(res => res.json())
         .then(spellbook => setSpells(spellbook))
@@ -45,7 +45,7 @@ function Spell(props) {
       //create JSON that contains all Form names & display
     }
 
-    fetchSpells();
+    fetchForms();
   }, [ setSpells ]);
 
   const getOptions = () => {

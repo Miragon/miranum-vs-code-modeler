@@ -191,7 +191,7 @@ $(function () {
 });
 
 
-// helpers //////////////////////
+//  ---------------HELPERS---------------  \\
 function debounce(fn, timeout) {
 
     let timer;
