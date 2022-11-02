@@ -3,7 +3,8 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 import {
     BpmnPropertiesPanelModule,
     BpmnPropertiesProviderModule,
-    CamundaPlatformPropertiesProviderModule
+    CamundaPlatformPropertiesProviderModule,
+    ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
 
 // Propertie Extensions
@@ -11,16 +12,21 @@ import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-plat
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
 import formSimpProviderModule from '../PropertieProvider/provider/index';
 import FormSimpDescriptor from '../PropertieProvider/descriptors/formSimp';
+import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
+
+//default diagram
+import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
 // css
 import './app.css';
 import '../../node_modules/bpmn-js/dist/assets/bpmn-js.css';
 import '../../node_modules/bpmn-js/dist/assets/diagram-js.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css';
+import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
+import '../../node_modules/@bpmn-io/element-template-chooser/dist/element-template-chooser.css';
 
-import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
-
-//import {debounce} from 'min-dash';
+// element templates
+import sendMail from '../../examples/element-templates/mail-task-template.json';
 
 // Only for developing
 const ENVIROMENTS = {
@@ -30,12 +36,22 @@ const ENVIROMENTS = {
 const ENV = ENVIROMENTS.Browser;
 
 const container = $('#js-drop-zone');
-let vscode;
+let templates;
+
+// for env === borwser
 let textarea;
 
 if (ENV === 'vscode') {
-    vscode = acquireVsCodeApi();
+    // 'vscode' is set before we load this script
+    const state = vscode.getState();
+    if (state) {
+        // here get the files
+        templates = JSON.parse(state.files);
+    }
+
 } else if (ENV === 'browser') {
+    templates = [sendMail];
+
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
     const style = document.createElement('style');
@@ -62,9 +78,9 @@ if (ENV === 'vscode') {
     document.body.appendChild(simulator);
 }
 
-
 const modeler = new BpmnModeler({
-    container: '#js-canvas', keyboard: {
+    container: '#js-canvas',
+    keyboard: {
         bindTo: document
     },
     propertiesPanel: {
@@ -74,13 +90,16 @@ const modeler = new BpmnModeler({
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
         CamundaPlatformPropertiesProviderModule,
+        ElementTemplatesPropertiesProviderModule,
+        ElementTemplateChooserModule,
         CamundaPlatformBehaviors,
         formSimpProviderModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors,
         formSimplifier: FormSimpDescriptor
-    }
+    },
+    elementTemplates: templates
 });
 container.removeClass('with-diagram');
 
@@ -122,22 +141,20 @@ async function exportDiagram() {
 
 // main
 $(function () {
-
     if (ENV === 'vscode') {
         const state = vscode.getState();
         if (state) {
             importDiagram(state.text);
-        } else {
-            importDiagram();
         }
 
         window.addEventListener('message', (event) => {
             const message = event.data;
             switch (message.type) {
-                case 'bpmn-modeler.updateFromExtension':
+                case 'bpmn-modeler.updateFromExtension': {
                     const xml = message.text;
                     importDiagram(xml);
                     return;
+                }
             }
         });
 

@@ -4,13 +4,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = 'bpmn-modeler';
 
-    public static register(context: vscode.ExtensionContext): vscode.Disposable {
-        const provider = new BpmnModeler(context);
+    public static register(context: vscode.ExtensionContext, files: Array<JSON>): vscode.Disposable {
+        const provider = new BpmnModeler(context, files);
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
     public constructor(
-        private readonly context: vscode.ExtensionContext
+        private readonly context: vscode.ExtensionContext,
+        private readonly files: Array<JSON>
     ) { }
 
     /**
@@ -30,7 +31,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             enableScripts: true
         };
 
-        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri);
+        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, this.files);
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
@@ -40,12 +41,12 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             }
         });
 
-        function updateWebview() {
+        const updateWebview = () => {
             webviewPanel.webview.postMessage({
                 type: BpmnModeler.viewType + '.updateFromExtension',
                 text: document.getText()
             });
-        }
+        };
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
             if (event.document.uri.toString() === document.uri.toString() && event.contentChanges.length !== 0) {
@@ -63,7 +64,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         updateWebview();
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, files: Array<JSON>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -121,6 +122,13 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <div class="properties-panel-parent" id="js-properties-panel"></div>
               </div>
               
+              <script type="text/javascript" nonce="${nonce}">
+                const vscode = acquireVsCodeApi();
+                vscode.setState({
+                  // TODO: serialize the xml (document.getText()) and set as text property
+                  files: '${JSON.stringify(files)}'    // serialize files-Array
+                });
+              </script>
               <script type="text/javascript" src="${scriptApp}" nonce="${nonce}"></script>
             </body>
             </html>
