@@ -47,7 +47,7 @@ if (ENV === 'vscode') {
     const state = vscode.getState();
     if (state) {
         // here get the files
-        templates = JSON.parse(state.elementTemplates);
+        templates = JSON.parse(state.elTemplates);
         forms = unpackForms(JSON.parse(state.forms));
     }
 
