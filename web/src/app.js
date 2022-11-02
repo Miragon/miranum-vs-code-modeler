@@ -33,7 +33,7 @@ const ENVIROMENTS = {
     Browser: 'browser',
     VsCode: 'vscode'
 };
-const ENV = ENVIROMENTS.Browser;
+const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let templates;

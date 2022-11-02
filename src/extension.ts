@@ -13,6 +13,11 @@ export function activate(context: vscode.ExtensionContext) {
             .then((results) => {
                 context.subscriptions.push(BpmnModeler.register(context, results));
             });
+        fileSystemScanner.getForms()
+            .then((results) => {
+                console.log(results);
+                //context.subscriptions.push(BpmnModeler.register(context, results))
+            });
     }
 }
 
