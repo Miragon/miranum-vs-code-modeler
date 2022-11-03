@@ -33,6 +33,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
         fileSystemScanner.getAllFiles()
+            //result[0] = elementTemplates --- results[1] = formKeys
             .then((result) => {
                 webviewPanel.webview.html =
                     this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), result);

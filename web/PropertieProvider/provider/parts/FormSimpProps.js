@@ -8,7 +8,7 @@ export default function(element) {
 
   return [
     {
-      id: 'form',
+      id: 'formKey',
       element,
       component: Form,
       isEdited: isSelectEntryEdited
@@ -30,13 +30,12 @@ function Form(props) {
 
   const setValue = value => {
     return modeling.updateProperties(element, {
-      form: value
+      formKey: value
     });
   };
 
-  const [ forms, setForms ] = useState([]);
-
   //fetch forms (from window variable) and fill Forms with it
+  const [ forms, setForms ] = useState([]);
   useEffect(() => {
      setForms(window.forms);
   }, [ setForms ]);

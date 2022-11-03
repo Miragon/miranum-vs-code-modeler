@@ -36,7 +36,7 @@ export default function FormSimpProvider(propertiesPanel, translate) {
     return function(groups) {
 
       // Add the "form" group
-      if(is(element, 'bpmn:UserTask')) {
+      if(is(element, 'bpmn:StartEvent') || is(element, 'bpmn:UserTask')) {
         groups.push(createFormGroup(element, translate));
       }
       return groups;
@@ -55,9 +55,10 @@ export default function FormSimpProvider(propertiesPanel, translate) {
 FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
 
 // Create the custom form group
+//due to prefix 'ElementTemplates__' it will stay displayed even with templates active
 function createFormGroup(element, translate) {
   return {
-    id: 'formSimplifier',
+    id: 'ElementTemplates__formSimplifier',
     label: translate('Form simplifier'),
     entries: formSimpProps(element)
   };

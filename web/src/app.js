@@ -11,7 +11,6 @@ import {
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
 import formSimpProviderModule from '../PropertieProvider/provider/index';
-import FormSimpDescriptor from '../PropertieProvider/descriptors/formSimp';
 import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
 
 //default diagram
@@ -104,8 +103,7 @@ const modeler = new BpmnModeler({
         formSimpProviderModule
     ],
     moddleExtensions: {
-        camunda: camundaModdleDescriptors,
-        formSimplifier: FormSimpDescriptor
+        camunda: camundaModdleDescriptors
     },
     elementTemplates: templates
 });
