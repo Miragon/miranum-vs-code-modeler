@@ -84,12 +84,15 @@ const modeler = new BpmnModeler({
         parent: '#js-properties-panel'
     },
     additionalModules: [
+        // standard properties panel
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
+        // camunda properties panel
         CamundaPlatformPropertiesProviderModule,
+        CamundaPlatformBehaviors,
+        // element templates
         ElementTemplatesPropertiesProviderModule,
-        ElementTemplateChooserModule,
-        CamundaPlatformBehaviors
+        ElementTemplateChooserModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors

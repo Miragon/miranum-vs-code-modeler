@@ -28,7 +28,7 @@ export class FileSystemScanner {
      */
     public getElementTemplates(): Thenable<Array<JSON>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
-        return this.getResultAsJson(this.readFile(uri));
+        return this.getResultsAsJson(this.readFile(uri));
     }
 
     /**
@@ -36,7 +36,7 @@ export class FileSystemScanner {
      */
     public getForms(): Thenable<Array<JSON>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getResultAsJson(this.readFile(uri));
+        return this.getResultsAsJson(this.readFile(uri));
     }
 
     /**
@@ -45,14 +45,14 @@ export class FileSystemScanner {
      * @returns Thenable with an array of json objects
      * @private
      */
-    private getResultAsJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
+    private getResultsAsJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
         return thenable
             .then((results) => {
-                const elementTemplates: Array<JSON> = [];
+                const files: Array<JSON> = [];
                 results.forEach((result) => {
-                    elementTemplates.push(JSON.parse(result));
+                    files.push(JSON.parse(result));
                 });
-                return elementTemplates;
+                return files;
             });
     }
 
