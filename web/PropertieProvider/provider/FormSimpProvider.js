@@ -36,7 +36,7 @@ export default function FormSimpProvider(propertiesPanel, translate) {
     return function(groups) {
 
       // Add the "form" group
-      if(is(element, 'bpmn:Process')) {
+      if(is(element, 'bpmn:UserTask')) {
         groups.push(createFormGroup(element, translate));
       }
       return groups;

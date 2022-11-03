@@ -1,6 +1,6 @@
 {
   "name": "FormSimplifier",
-  "prefix": "formsimp",
+  "prefix": "formSimp",
   "uri": "http://formsimp",
   "xml": {
     "tagAlias": "lowerCase"
@@ -8,13 +8,13 @@
   "associations": [],
   "types": [
     {
-      "name": "Formsimplifier",
+      "name": "FormSimpChooser",
       "extends": [
-        "bpmn:Process"
+        "bpmn:UserTask"
       ],
       "properties": [
         {
-          "name": "spell",
+          "name": "form",
           "isAttr": true,
           "type": "String"
         }
