@@ -54,7 +54,7 @@ if (ENV === 'vscode') {
 
 } else if (ENV === 'browser') {
     templates = [sendMail];
-    //??forms??
+    //forms?
 
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
@@ -91,12 +91,16 @@ const modeler = new BpmnModeler({
         parent: '#js-properties-panel'
     },
     additionalModules: [
+        // standard properties panel
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
+        // camunda properties panel
         CamundaPlatformPropertiesProviderModule,
+        CamundaPlatformBehaviors,
+        // element templates
         ElementTemplatesPropertiesProviderModule,
         ElementTemplateChooserModule,
-        CamundaPlatformBehaviors,
+        // form simplifier
         formSimpProviderModule
     ],
     moddleExtensions: {

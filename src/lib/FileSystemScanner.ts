@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 
+/**
+ * Scan the current working directory for important files.
+ */
 export class FileSystemScanner {
 
     private readonly fs = vscode.workspace.fs;
@@ -10,11 +13,22 @@ export class FileSystemScanner {
     }
 
     /**
+     * Get all possible file types.
+     */
+    public getAllFiles(): Promise<JSON[][]> {
+        const thenables = [
+            this.getForms(),
+            this.getElementTemplates()
+        ];
+        return Promise.all(thenables);
+    }
+
+    /**
      * Get element templates from the current working directory
      */
     public getElementTemplates(): Thenable<Array<JSON>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
-        return this.getResultAsJson(this.readFile(uri));
+        return this.getResultsAsJson(this.readFile(uri));
     }
 
     /**
@@ -35,16 +49,15 @@ export class FileSystemScanner {
      * @returns Thenable with an array of json objects
      * @private
      */
-    private getResultAsJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
+    private getResultsAsJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
         return thenable
             .then((results) => {
-                const elementTemplates: Array<JSON> = [];
+                const files: Array<JSON> = [];
                 results.forEach((result) => {
-                    elementTemplates.push(JSON.parse(result));
+                    files.push(JSON.parse(result));
                 });
-                return elementTemplates;
+                return files;
             });
-
     }
 
     /**
