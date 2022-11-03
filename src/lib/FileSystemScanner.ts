@@ -12,6 +12,9 @@ export class FileSystemScanner {
     ) {
     }
 
+    /**
+     * Get all possible file types.
+     */
     public getAllFiles(): Promise<JSON[][]> {
         const thenables = [
             this.getForms(),

@@ -12,7 +12,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public constructor(
         private readonly context: vscode.ExtensionContext
-        //private readonly files: Array<JSON>
     ) { }
 
     /**
@@ -35,7 +34,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
         fileSystemScanner.getAllFiles()
             .then((result) => {
-                webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, result);
+                webviewPanel.webview.html =
+                    this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), result);
             });
 
 
@@ -66,11 +66,9 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         webviewPanel.onDidDispose(() => {
             changeDocumentSubscription.dispose();
         });
-
-        updateWebview();
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, files: Array<Array<any>>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: Array<Array<any>>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -131,7 +129,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
               <script type="text/javascript" nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
                 vscode.setState({
-                  // TODO: serialize the xml (document.getText()) and set as text property
+                  text: '${JSON.stringify(initialContent)}',
                   files: '${JSON.stringify(files)}'    // serialize files-Array
                 });
               </script>
