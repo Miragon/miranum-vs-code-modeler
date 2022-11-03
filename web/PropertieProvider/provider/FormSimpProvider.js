@@ -57,7 +57,7 @@ FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
 // Create the custom form group
 function createFormGroup(element, translate) {
   return {
-    id: 'formSimp',
+    id: 'formSimplifier',
     label: translate('Form simplifier'),
     entries: formSimpProps(element)
   };

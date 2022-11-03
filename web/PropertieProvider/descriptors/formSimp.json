@@ -1,7 +1,7 @@
 {
   "name": "FormSimplifier",
-  "prefix": "formSimp",
-  "uri": "http://formsimp",
+  "prefix": "Miragon",
+  "uri": "http://Miragon",
   "xml": {
     "tagAlias": "lowerCase"
   },

@@ -15,10 +15,10 @@ export class FileSystemScanner {
     /**
      * Get all possible file types.
      */
-    public getAllFiles(): Promise<JSON[][]> {
+    public getAllFiles(): Promise<Awaited<Array<JSON> | Array<string>>[]> {
         const thenables = [
-            this.getForms(),
-            this.getElementTemplates()
+            this.getElementTemplates(),
+            this.getForms()
         ];
         return Promise.all(thenables);
     }
