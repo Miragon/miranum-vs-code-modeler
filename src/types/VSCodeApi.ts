@@ -7,11 +7,9 @@ export type VsCode = {
 type VscMessage = {
     type: string;
     content: string;
-    files: Array<JSON>;
 };
 
 type VscState = {
     text: string;
-    elTemplates: string;
-    forms: string;
+    files: string;
 };

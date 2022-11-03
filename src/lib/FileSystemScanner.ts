@@ -20,9 +20,9 @@ export class FileSystemScanner {
     /**
      * Get forms from the current working directory
      */
-    public getForms(): Thenable<Array<JSON>> {
+    public getForms(): Thenable<Array<string>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getResultAsJson(this.readFile(uri));
+        return this.getFormKeys(this.readFile(uri));
     }
 
 
@@ -45,6 +45,28 @@ export class FileSystemScanner {
                 return elementTemplates;
             });
 
+    }
+
+    /**
+     * searches for all form keys from the given files
+     * @param thenable The thenable whose result is to be filtered
+     * @returns a string array, with all form Keys
+     * @private
+     */
+    private getFormKeys(thenable: Thenable<Awaited<string>[]>): Thenable<Array<string>> {
+        return thenable
+            .then((files) => {
+                const formKeys = new Array<string>;
+                files.forEach((result) => {
+                    const file = result.replace(/\s/g, '');
+                    if(file.includes('{"key":"')) {
+                        const start = file.indexOf('{"key":"') + 8;
+                        const end = file.indexOf('","schema":{"type":');
+                        formKeys.push(file.substring(start, end));
+                    }
+                });
+                return formKeys;
+            });
     }
 
     /**

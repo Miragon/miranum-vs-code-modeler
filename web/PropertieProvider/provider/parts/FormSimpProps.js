@@ -36,17 +36,9 @@ function Form(props) {
 
   const [ forms, setForms ] = useState([]);
 
+  //fetch forms (from window variable) and fill Forms with it
   useEffect(() => {
-    function fetchForms() {
-      fetch('http://localhost:1234/spell')
-        .then(res => res.json())
-        .then(forms => setForms(forms))
-        .catch(error => console.error(error));
-      //create JSON that contains all Form names & display
-      //setForms(forms);
-    }
-
-    fetchForms();
+     setForms(window.forms);
   }, [ setForms ]);
 
   const getOptions = () => {

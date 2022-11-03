@@ -37,7 +37,6 @@ const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let templates;
-let forms;
 
 // for env === borwser
 let textarea;
@@ -47,8 +46,10 @@ if (ENV === 'vscode') {
     const state = vscode.getState();
     if (state) {
         // here get the files
-        templates = JSON.parse(state.elTemplates);
-        forms = unpackForms(JSON.parse(state.forms));
+        //forms needs to be on window layer, so we can work with it in FormSimpProps
+        files = JSON.parse(state.files);
+        templates = files[0];
+        window.forms = files[1];
     }
 
 } else if (ENV === 'browser') {
@@ -206,17 +207,4 @@ function debounce(fn, timeout) {
 
         timer = setTimeout(fn, timeout);
     };
-}
-
-function unpackForms(forms){
-    let map = Map;
-    forms.forEach((result) => {
-        const tmp = JSON.stringify(result);
-        if(tmp.includes('{"key":"')) {
-            const start = tmp.indexOf('{"key":"') + 8;
-            const end = tmp.indexOf('","schema":{"type":');
-            map.set(tmp.substring(start, end), result);
-        }
-    });
-    return map;
 }
