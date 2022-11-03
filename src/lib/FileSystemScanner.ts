@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 
+/**
+ * Scan the current working directory for important files.
+ */
 export class FileSystemScanner {
 
     private readonly fs = vscode.workspace.fs;
@@ -40,7 +43,6 @@ export class FileSystemScanner {
                 });
                 return elementTemplates;
             });
-
     }
 
     /**
