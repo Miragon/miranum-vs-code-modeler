@@ -1,38 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
   <bpmn2:process id="Process_1" isExecutable="false">
-    <bpmn2:startEvent id="Event_0eegbey">
-      <bpmn2:outgoing>Flow_12pxal1</bpmn2:outgoing>
+    <bpmn2:startEvent id="StartEvent_1">
+      <bpmn2:outgoing>Flow_0dibn0h</bpmn2:outgoing>
     </bpmn2:startEvent>
-    <bpmn2:sequenceFlow id="Flow_12pxal1" sourceRef="Event_0eegbey" targetRef="Activity_1kbx1ck" />
-    <bpmn2:endEvent id="Event_1lhi70a">
-      <bpmn2:incoming>Flow_1bc7a6k</bpmn2:incoming>
+    <bpmn2:sequenceFlow id="Flow_0dibn0h" sourceRef="StartEvent_1" targetRef="Activity_14wos1p" />
+    <bpmn2:endEvent id="Event_1842mya">
+      <bpmn2:incoming>Flow_13imfva</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="Flow_1bc7a6k" sourceRef="Activity_1kbx1ck" targetRef="Event_1lhi70a" />
-    <bpmn2:serviceTask id="Activity_1kbx1ck" name="Send Mail">
-      <bpmn2:incoming>Flow_12pxal1</bpmn2:incoming>
-      <bpmn2:outgoing>Flow_1bc7a6k</bpmn2:outgoing>
+    <bpmn2:sequenceFlow id="Flow_13imfva" sourceRef="Activity_14wos1p" targetRef="Event_1842mya" />
+    <bpmn2:serviceTask id="Activity_14wos1p" camunda:modelerTemplate="de.miragon.example.MailTask" camunda:delegateExpression="${mailDelegate}">
+      <bpmn2:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="recipient" />
+          <camunda:inputParameter name="content" />
+          <camunda:inputParameter name="subject" />
+        </camunda:inputOutput>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>Flow_0dibn0h</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_13imfva</bpmn2:outgoing>
     </bpmn2:serviceTask>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="Event_0eegbey_di" bpmnElement="Event_0eegbey">
-        <dc:Bounds x="262" y="152" width="36" height="36" />
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="412" y="240" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0jx8zfx_di" bpmnElement="Activity_1kbx1ck">
-        <dc:Bounds x="350" y="130" width="100" height="80" />
-        <bpmndi:BPMNLabel />
+      <bpmndi:BPMNShape id="Event_1842mya_di" bpmnElement="Event_1842mya">
+        <dc:Bounds x="652" y="240" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1lhi70a_di" bpmnElement="Event_1lhi70a">
-        <dc:Bounds x="502" y="152" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_18mvnwa_di" bpmnElement="Activity_14wos1p">
+        <dc:Bounds x="500" y="218" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_12pxal1_di" bpmnElement="Flow_12pxal1">
-        <di:waypoint x="298" y="170" />
-        <di:waypoint x="350" y="170" />
+      <bpmndi:BPMNEdge id="Flow_0dibn0h_di" bpmnElement="Flow_0dibn0h">
+        <di:waypoint x="448" y="258" />
+        <di:waypoint x="500" y="258" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1bc7a6k_di" bpmnElement="Flow_1bc7a6k">
-        <di:waypoint x="450" y="170" />
-        <di:waypoint x="502" y="170" />
+      <bpmndi:BPMNEdge id="Flow_13imfva_di" bpmnElement="Flow_13imfva">
+        <di:waypoint x="600" y="258" />
+        <di:waypoint x="652" y="258" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

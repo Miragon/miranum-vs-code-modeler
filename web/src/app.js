@@ -42,7 +42,9 @@ if (ENV === 'vscode') {
     const state = vscode.getState();
     if (state) {
         // here get the files
-        templates = JSON.parse(state.files);
+        files = JSON.parse(state.files);
+        templates = files[1];
+        console.log(templates);
     }
 
 } else if (ENV === 'browser') {

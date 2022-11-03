@@ -1,17 +1,18 @@
 import * as vscode from 'vscode';
+import {FileSystemScanner} from "./lib/FileSystemScanner";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = 'bpmn-modeler';
 
-    public static register(context: vscode.ExtensionContext, files: Array<JSON>): vscode.Disposable {
-        const provider = new BpmnModeler(context, files);
+    public static register(context: vscode.ExtensionContext): vscode.Disposable {
+        const provider = new BpmnModeler(context);
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
     public constructor(
-        private readonly context: vscode.ExtensionContext,
-        private readonly files: Array<JSON>
+        private readonly context: vscode.ExtensionContext
+        //private readonly files: Array<JSON>
     ) { }
 
     /**
@@ -31,7 +32,12 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             enableScripts: true
         };
 
-        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, this.files);
+        const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
+        fileSystemScanner.getAllFiles()
+            .then((result) => {
+                webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, result);
+            });
+
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
@@ -64,7 +70,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         updateWebview();
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, files: Array<JSON>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, files: Array<Array<any>>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -154,5 +160,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         );
 
         return vscode.workspace.applyEdit(edit);
+    }
+
+    private getProjectUri(path: string): string {
+        const filename = path.replace(/^.*[\\\/]/, '');
+        return path.substring(0, path.indexOf(filename));
     }
 }

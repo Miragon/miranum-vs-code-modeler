@@ -12,6 +12,14 @@ export class FileSystemScanner {
     ) {
     }
 
+    public getAllFiles(): Promise<JSON[][]> {
+        const thenables = [
+            this.getForms(),
+            this.getElementTemplates()
+        ];
+        return Promise.all(thenables);
+    }
+
     /**
      * Get element templates from the current working directory
      */
