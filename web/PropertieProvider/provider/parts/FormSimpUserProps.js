@@ -1,8 +1,8 @@
-import {SelectEntry, isSelectEntryEdited} from '@bpmn-io/properties-panel';
-import { useService } from 'bpmn-js-properties-panel';
-import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import {isSelectEntryEdited, SelectEntry} from '@bpmn-io/properties-panel';
+import {useService} from 'bpmn-js-properties-panel';
+import {useEffect, useState} from '@bpmn-io/properties-panel/preact/hooks';
 import {getBusinessObject, is} from "bpmn-js/lib/util/ModelUtil";
-import { without } from 'min-dash';
+import {without} from 'min-dash';
 import {createElement} from "camunda-bpmn-js-behaviors/lib/util/ElementUtil";
 
 export default function(element) {
@@ -18,23 +18,34 @@ export default function(element) {
 
 function Form(props) {
   const { element, id } = props;
+  //injections
   const modeling = useService('modeling');
   const bpmnFactory = useService('bpmnFactory')
   const translate = useService('translate');
   const debounce = useService('debounceInput');
 
+  //currently hard-coded binding
+  //needed for InputParameter - setValue/getValue
+  const binding = {
+    type: 'camunda:inputParameter',
+    name: 'app_task_schema_key'
+  };
+  //both are currently only used for getValue(), if a input has already been allocated
+  const inputOutput = findExtension(getBusinessObject(element), 'camunda:InputOutput');
+  const inputParameter = inputOutput && findInputParameter(inputOutput, binding);
+
   const getValue = () => {
+    if(inputParameter) {
+      return inputParameter.value;
+    }
     return element.businessObject.form || '';
   };
 
   const setValue = (value) => {
     const property = {
       value: value,
-      binding: {
-        type: 'camunda:inputParameter',
-        name: 'app_task_schema_key'
-      }
-    }
+      binding: binding
+    };
 
     if (value) {
       addInputParameter(element, property, bpmnFactory, modeling);
@@ -82,6 +93,7 @@ function addInputParameter(element, property, bpmnFactory, modeling) {
   const inputOutput = findExtension(businessObject, 'camunda:InputOutput');
   let updatedBusinessObject, update;
 
+  //goes through all possibilities and sets updateBusinessObject & update accordingly
   if (!extensionElements) {
     updatedBusinessObject = businessObject;
 
@@ -104,6 +116,7 @@ function addInputParameter(element, property, bpmnFactory, modeling) {
 
     update = { inputParameters: inputOutput.get('camunda:inputParameters').concat(inputParameter) };
   }
+  //write into xml
   modeling.updateModdleProperties(element, updatedBusinessObject, update);
 }
 
@@ -116,6 +129,7 @@ function removeInputParameter(element, binding, modeling) {
 
   const inputParameter = findInputParameter(inputOutput, binding);
 
+  //delete External Task paragraph from xml
   modeling.updateModdleProperties(element, inputOutput, {
     inputParameters: without(inputParameters, inputParameter)
   });
