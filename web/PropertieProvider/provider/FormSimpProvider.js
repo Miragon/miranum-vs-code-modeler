@@ -1,9 +1,8 @@
-import formSimpProps from './parts/FormSimpProps';
+import formSimpStartProps from './parts/FormSimpStartProps';
+import formSimpUserProps from './parts/FormSimpUserProps';
 import {is} from 'bpmn-js/lib/util/ModelUtil';
-//import { useTranslation } from "react-i18next";
 
 const LOW_PRIORITY = 500;
-//const { t } = useTranslation("default");
 
 /**
  * A provider with a `#getGroups(element)` method
@@ -35,31 +34,43 @@ export default function FormSimpProvider(propertiesPanel, translate) {
      */
     return function(groups) {
 
-      // Add the "form" group
-      if(is(element, 'bpmn:StartEvent') || is(element, 'bpmn:UserTask')) {
-        groups.push(createFormGroup(element, translate));
+      // Add the "form" group for StartEvent
+      if(is(element, 'bpmn:StartEvent')) {
+        groups.push(createStartFormGroup(element, translate));
+      }
+      // Add the "form" group for UserTasks
+      if(is(element, 'bpmn:UserTask')) {
+        groups.push(createUserFormGroup(element, translate));
       }
       return groups;
     };
   };
 
-
   // registration ////////
 
   // Register our custom form properties provider.
-  // Use a lower priority to ensure it is loaded after
-  // the basic BPMN properties.
+  // Use a lower priority to ensure it is loaded after the basic BPMN properties.
   propertiesPanel.registerProvider(LOW_PRIORITY, this);
 }
 
 FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
 
-// Create the custom form group
-//due to prefix 'ElementTemplates__' it will stay displayed even with templates active
-function createFormGroup(element, translate) {
+/**
+ * Create the custom groups
+ * due to prefix 'ElementTemplates__' it will stay displayed even with templates active
+ */
+function createStartFormGroup(element, translate) {
   return {
     id: 'ElementTemplates__formSimplifier',
     label: translate('Form simplifier'),
-    entries: formSimpProps(element)
+    entries: formSimpStartProps(element)
+  };
+}
+
+function createUserFormGroup(element, translate) {
+  return {
+    id: 'ElementTemplates__formSimplifier',
+    label: translate('Form simplifier'),
+    entries: formSimpUserProps(element)
   };
 }

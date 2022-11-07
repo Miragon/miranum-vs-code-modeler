@@ -1,11 +1,8 @@
 import {SelectEntry, isSelectEntryEdited} from '@bpmn-io/properties-panel';
 import { useService } from 'bpmn-js-properties-panel';
-
-// import hooks from the vendored preact package
 import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 export default function(element) {
-
   return [
     {
       id: 'formKey',
@@ -18,16 +15,16 @@ export default function(element) {
 
 function Form(props) {
   const { element, id } = props;
-
   const modeling = useService('modeling');
   const translate = useService('translate');
   const debounce = useService('debounceInput');
-
 
   const getValue = () => {
     return element.businessObject.form || '';
   };
 
+  //formKey = Embedded or External Task Forms
+  //formRef = Camunda Forms
   const setValue = value => {
     return modeling.updateProperties(element, {
       formKey: value
@@ -59,16 +56,4 @@ function Form(props) {
     getOptions,
     debounce
   });
-
-  //Original example:
-  // return `<TextFieldEntry
-  //   id={ id }
-  //   element={ element }
-  //   description={ translate('Choose your form') }
-  //   label={ translate('Form') }
-  //   getValue={ getValue }
-  //   setValue={ setValue }
-  //   getOptions={ getOptions }
-  //   debounce={ debounce }
-  //   />`;
 }
