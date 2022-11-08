@@ -38,7 +38,7 @@ function Form(props) {
     if(inputParameter) {
       return inputParameter.value;
     }
-    return element.businessObject.form || '';
+    return '';
   };
 
   const setValue = (value) => {

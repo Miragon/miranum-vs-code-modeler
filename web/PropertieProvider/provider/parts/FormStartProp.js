@@ -13,6 +13,8 @@ export default function(element) {
   ];
 }
 
+//camunda:formKey = Embedded or External Task Forms
+//camunda:formRef = Camunda Forms
 function Form(props) {
   const { element, id } = props;
   const modeling = useService('modeling');
@@ -20,11 +22,9 @@ function Form(props) {
   const debounce = useService('debounceInput');
 
   const getValue = () => {
-    return element.businessObject.form || '';
+    return element.businessObject.formKey || '';
   };
 
-  //formKey = Embedded or External Task Forms
-  //formRef = Camunda Forms
   const setValue = value => {
     return modeling.updateProperties(element, {
       formKey: value
