@@ -1,6 +1,6 @@
-import FormSimpProvider from './FormSimpProvider';
+import MiragonProvider from './MiragonProvider';
 
 export default {
-  __init__: [ 'formSimpProvider' ],
-  formSimpProvider: [ 'type', FormSimpProvider ]
+  __init__: [ 'miragonProvider' ],
+  miragonProvider: [ 'type', MiragonProvider ]
 };

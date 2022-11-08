@@ -11,7 +11,7 @@ import {
 // Propertie Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
-import formSimpProviderModule from '../PropertieProvider/provider/index';
+import miragonProviderModule from '../PropertieProvider/provider/index';
 import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
 
 //default diagram
@@ -104,7 +104,7 @@ const modeler = new BpmnModeler({
         ElementTemplatesPropertiesProviderModule,
         ElementTemplateChooserModule,
         // form simplifier
-        formSimpProviderModule
+        miragonProviderModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors

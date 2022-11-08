@@ -81,7 +81,7 @@ function Form(props) {
   });
 }
 
-
+//add or change
 function addInputParameter(element, property, bpmnFactory, modeling) {
   const {
     binding,
@@ -90,30 +90,38 @@ function addInputParameter(element, property, bpmnFactory, modeling) {
 
   const businessObject = getBusinessObject(element); //alternativ: element.businessObject
   const extensionElements = businessObject.get('extensionElements');
-  const inputOutput = findExtension(businessObject, 'camunda:InputOutput');
+  const inputOutput = findExtension(businessObject, 'camunda:InputOutput');                            //already as a global variable
   let updatedBusinessObject, update;
 
   //goes through all possibilities and sets updateBusinessObject & update accordingly
+  //case: nothing exists
   if (!extensionElements) {
     updatedBusinessObject = businessObject;
-
     const extensionElements = createExtensionElements(businessObject, bpmnFactory),
         inputOutput = createInputOutput(binding, value, bpmnFactory, extensionElements);
     extensionElements.values.push(inputOutput);
-
     update = { extensionElements };
+
+  //case: Input has existed, but has been deleted again
   } else if (!inputOutput) {
     updatedBusinessObject = extensionElements;
-
     const inputOutput = createInputOutput(binding, value, bpmnFactory, extensionElements);
+    update = {values: extensionElements.get('values').concat(inputOutput)};
 
+  //case: input exists, but key is already used => overwrite
+  } else if (findInputParameter(inputOutput, binding)) {
+    removeInputParameter(element, binding, modeling);
+
+    updatedBusinessObject = extensionElements;
+    const inputOutput = createInputOutput(binding, value, bpmnFactory, extensionElements);
     update = { values: extensionElements.get('values').concat(inputOutput) };
+
+  //case: input exists, and key isn't allocated yet
   } else {
     updatedBusinessObject = inputOutput;
 
     const inputParameter = createInputParameter(binding, value, bpmnFactory);
     inputParameter.$parent = inputOutput;
-
     update = { inputParameters: inputOutput.get('camunda:inputParameters').concat(inputParameter) };
   }
   //write into xml
@@ -168,7 +176,7 @@ function createInputOutput(binding, value, bpmnFactory, extensionElements) {
  *
  * @return {ModdleElement}
  */
-export function createInputParameter(binding, value, bpmnFactory) {
+function createInputParameter(binding, value, bpmnFactory) {
   const {
     name,
     scriptFormat
@@ -202,7 +210,7 @@ export function createInputParameter(binding, value, bpmnFactory) {
  *
  * @return {ModdleElement} the extension
  */
-export function findExtension(element, type) {
+function findExtension(element, type) {
   const businessObject = getBusinessObject(element);
 
   let extensionElements;
@@ -222,7 +230,7 @@ export function findExtension(element, type) {
   });
 }
 
-export function findInputParameter(inputOutput, binding) {
+function findInputParameter(inputOutput, binding) {
   const parameters = inputOutput.get('inputParameters');
 
   return parameters.find((parameter) => {

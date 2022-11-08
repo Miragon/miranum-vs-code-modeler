@@ -1,6 +1,7 @@
 import formSimpStartProps from './parts/FormSimpStartProps';
 import formSimpUserProps from './parts/FormSimpUserProps';
 import {is} from 'bpmn-js/lib/util/ModelUtil';
+import {findIndex} from "min-dash";
 
 const LOW_PRIORITY = 500;
 
@@ -11,7 +12,7 @@ const LOW_PRIORITY = 500;
  * @param {PropertiesPanel} propertiesPanel
  * @param {Function} translate
  */
-export default function FormSimpProvider(propertiesPanel, translate) {
+export default function MiragonProvider(propertiesPanel, translate) {
 
   // API ////////
 
@@ -46,19 +47,31 @@ export default function FormSimpProvider(propertiesPanel, translate) {
     };
   };
 
-  // registration ////////
+  /**
+   * Remove the original Form property
+   *
+   * @param element
+   * @returns {function(*): *}
+   */
+  // this.getTabs = function (element) {
+  //   return function (entries) {
+  //     // Remove a tab
+  //     const idx = findEntry(entries, "Form")
+  //     entries.splice(idx, 1);
+  //     return entries;
+  //   };
+  //   element.getEntriesByName("Form");
+  // };
 
-  // Register our custom form properties provider.
+  // registration ////////
   // Use a lower priority to ensure it is loaded after the basic BPMN properties.
   propertiesPanel.registerProvider(LOW_PRIORITY, this);
 }
 
-FormSimpProvider.$inject = [ 'propertiesPanel', 'translate' ];
+MiragonProvider.$inject = [ 'propertiesPanel', 'translate' ];
 
-/**
- * Create the custom groups
- * due to prefix 'ElementTemplates__' it will stay displayed even with templates active
- */
+// Create the custom groups
+// due to prefix 'ElementTemplates__' it will stay displayed even with templates active
 function createStartFormGroup(element, translate) {
   return {
     id: 'ElementTemplates__formSimplifier',
@@ -73,4 +86,10 @@ function createUserFormGroup(element, translate) {
     label: translate('Form simplifier'),
     entries: formSimpUserProps(element)
   };
+}
+
+
+//  ---------------------HELPERS---------------------  \\
+function findEntry(entries, entryId) {
+  return findIndex(entries, (e) => e.id === entryId);
 }
