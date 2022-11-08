@@ -37,6 +37,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 case BpmnModeler.viewType + '.updateFromWebview':
                     isUpdateFromWebview = true;
                     this.updateTextDocument(document, event.content);
+                    break;
+                case BpmnModeler.viewType + '.windowChange':
+                    updateWebview();
+                    break;
             }
         });
 

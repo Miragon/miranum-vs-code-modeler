@@ -118,6 +118,10 @@ $(function () {
     if (ENV === 'vscode') {
         const state = vscode.getState();
         if (state) {
+            //reload the file, in case of a window change
+            vscode.postMessage({
+                type: 'bpmn-modeler.windowChange'
+            });
             importDiagram(state.text);
         } else {
             importDiagram();
