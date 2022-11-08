@@ -1,5 +1,5 @@
-import formSimpStartProps from './parts/FormSimpStartProps';
-import formSimpUserProps from './parts/FormSimpUserProps';
+import formStartProp from './parts/FormStartProp';
+import formUserProp from './parts/FormUserProp';
 import {is} from 'bpmn-js/lib/util/ModelUtil';
 import {findIndex} from "min-dash";
 
@@ -35,33 +35,20 @@ export default function MiragonProvider(propertiesPanel, translate) {
      */
     return function(groups) {
 
-      // Add the "form" group for StartEvent
+      // Add own "form" group to StartEvent, and remove old Form property
       if(is(element, 'bpmn:StartEvent')) {
         groups.push(createStartFormGroup(element, translate));
+        groups = groups.filter(obj => obj.id !== 'CamundaPlatform__Form')
       }
-      // Add the "form" group for UserTasks
+      // Add own "form" group to UserTask, and remove old Form property
       if(is(element, 'bpmn:UserTask')) {
         groups.push(createUserFormGroup(element, translate));
+        groups = groups.filter(obj => obj.id !== 'CamundaPlatform__Form')
       }
+
       return groups;
     };
   };
-
-  /**
-   * Remove the original Form property
-   *
-   * @param element
-   * @returns {function(*): *}
-   */
-  // this.getTabs = function (element) {
-  //   return function (entries) {
-  //     // Remove a tab
-  //     const idx = findEntry(entries, "Form")
-  //     entries.splice(idx, 1);
-  //     return entries;
-  //   };
-  //   element.getEntriesByName("Form");
-  // };
 
   // registration ////////
   // Use a lower priority to ensure it is loaded after the basic BPMN properties.
@@ -70,26 +57,22 @@ export default function MiragonProvider(propertiesPanel, translate) {
 
 MiragonProvider.$inject = [ 'propertiesPanel', 'translate' ];
 
-// Create the custom groups
+
+//   -------------------------Custom Groups-------------------------   \\
 // due to prefix 'ElementTemplates__' it will stay displayed even with templates active
+
 function createStartFormGroup(element, translate) {
   return {
     id: 'ElementTemplates__formSimplifier',
-    label: translate('Form simplifier'),
-    entries: formSimpStartProps(element)
+    label: translate('Form'),
+    entries: formStartProp(element)
   };
 }
 
 function createUserFormGroup(element, translate) {
   return {
     id: 'ElementTemplates__formSimplifier',
-    label: translate('Form simplifier'),
-    entries: formSimpUserProps(element)
+    label: translate('Form'),
+    entries: formUserProp(element)
   };
-}
-
-
-//  ---------------------HELPERS---------------------  \\
-function findEntry(entries, entryId) {
-  return findIndex(entries, (e) => e.id === entryId);
 }
