@@ -11,4 +11,5 @@ type VscMessage = {
 
 type VscState = {
     text: string;
+    files: string;
 };
