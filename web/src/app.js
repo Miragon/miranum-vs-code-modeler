@@ -26,14 +26,13 @@ import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
 // example element template
 import sendMail from '../../examples/element-templates/mail-task-template.json';
-// example form
-import startForm from '../../examples/forms/start.form';
 
 // Only for developing
 const ENVIROMENTS = {
     Browser: 'browser',
     VsCode: 'vscode'
 };
+// Browser modelling is not supported
 const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
@@ -55,7 +54,6 @@ if (ENV === 'vscode') {
 
 } else if (ENV === 'browser') {
     templates = [sendMail];
-    window.forms = [startForm];
 
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
