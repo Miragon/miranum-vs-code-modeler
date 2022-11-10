@@ -14,6 +14,7 @@
 ├── src
 │   ├── BpmnModeler.ts
 │   ├── extension.ts
+│   ├── lib
 │   ├── test
 │   └── types
 └── web
@@ -21,6 +22,12 @@
     │   ├── app.css
     │   ├── app.js
     │   └── index.html
+    ├── PropertieProvider
+    │   ├── descriptor
+    │   └── provider
+    │      ├── parts
+    │      ├── index.js
+    │      └── MiragonProvider.js
     ├── tsconfig.json
     └── vite.config.js
 ```

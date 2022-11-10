@@ -15,10 +15,10 @@ export class FileSystemScanner {
     /**
      * Get all possible file types.
      */
-    public getAllFiles(): Promise<JSON[][]> {
+    public getAllFiles(): Promise<Awaited<Array<JSON> | Array<string>>[]> {
         const thenables = [
-            this.getForms(),
-            this.getElementTemplates()
+            this.getElementTemplates(),
+            this.getForms()
         ];
         return Promise.all(thenables);
     }
@@ -34,10 +34,14 @@ export class FileSystemScanner {
     /**
      * Get forms from the current working directory
      */
-    public getForms(): Thenable<Array<JSON>> {
+    public getForms(): Thenable<Array<string>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getResultsAsJson(this.readFile(uri));
+        return this.getFormKeys(this.readFile(uri));
     }
+
+
+
+//     -----------------------------HELPERS-----------------------------     \\
 
     /**
      * Converts the content of a thenable from string to json
@@ -53,6 +57,28 @@ export class FileSystemScanner {
                     files.push(JSON.parse(result));
                 });
                 return files;
+            });
+    }
+
+    /**
+     * searches for all form keys from the given files
+     * @param thenable The thenable whose result is to be filtered
+     * @returns a string array, with all form Keys
+     * @private
+     */
+    private getFormKeys(thenable: Thenable<Awaited<string>[]>): Thenable<Array<string>> {
+        return thenable
+            .then((files) => {
+                const formKeys = new Array<string>;
+                files.forEach((result) => {
+                    const file = result.replace(/\s/g, '');
+                    if(file.includes('{"key":"')) {
+                        const start = file.indexOf('{"key":"') + 8;
+                        const end = file.indexOf('","schema":{"type":');
+                        formKeys.push(file.substring(start, end));
+                    }
+                });
+                return formKeys;
             });
     }
 

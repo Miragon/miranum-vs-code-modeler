@@ -33,6 +33,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
         fileSystemScanner.getAllFiles()
+            //result[0] = elementTemplates --- results[1] = formKeys
             .then((result) => {
                 webviewPanel.webview.html =
                     this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), result);
@@ -72,7 +73,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: Array<Array<any>>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: Array<Array<JSON | string>>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -143,6 +144,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         `;
     }
 
+    //     -----------------------------HELPERS-----------------------------     \\
     private getNonce(): string {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
