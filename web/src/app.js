@@ -1,5 +1,4 @@
 import $ from 'jquery';
-//import  * as colors from "colors";
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import {
     BpmnPropertiesPanelModule,
@@ -14,9 +13,6 @@ import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
 import miragonProviderModule from '../PropertieProvider/provider/index';
 import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
 
-//default diagram
-import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
-
 // css
 import './app.css';
 import '../../node_modules/bpmn-js/dist/assets/bpmn-js.css';
@@ -25,8 +21,13 @@ import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
 import '../../node_modules/@bpmn-io/element-template-chooser/dist/element-template-chooser.css';
 
-// element templates
+//default diagram
+import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
+
+// example element template
 import sendMail from '../../examples/element-templates/mail-task-template.json';
+// example form
+import startForm from '../../examples/forms/start.form';
 
 // Only for developing
 const ENVIROMENTS = {
@@ -42,7 +43,6 @@ let templates;
 let textarea;
 
 if (ENV === 'vscode') {
-    //console.log(colors.cyan("Environment: vscode"));
     // 'vscode' is set before we load this script
     const state = vscode.getState();
     if (state) {
@@ -51,13 +51,11 @@ if (ENV === 'vscode') {
         files = JSON.parse(state.files);
         templates = files[0];
         window.forms = files[1];
-        //console.log(colors.cyan("Initialised: templates & forms"));
     }
 
 } else if (ENV === 'browser') {
-    //console.log(colors.cyan("Environment: browser"));
     templates = [sendMail];
-    //forms?
+    window.forms = [startForm];
 
     const simulator = document.createElement('div');  // simulates vscode respectively the document
     textarea = document.createElement('textarea');
@@ -131,7 +129,6 @@ async function importDiagram(xml) {
         container
             .removeClass('with-error')
             .addClass('with-diagram');
-        //console.log(colors.cyan("loaded / updated xml"));
     } catch (err) {
         container
             .removeClass('with-diagram')
@@ -139,12 +136,10 @@ async function importDiagram(xml) {
 
         container.find('.error pre').text(err.message);
         console.error(err);
-        //console.log(colors.red.bold("ERROR: ") + err.message);
     }
 }
 
 async function exportDiagram() {
-    //console.log(colors.cyan("exported diagram"));
     return (await modeler.saveXML({format: true}));
 }
 
@@ -189,10 +184,8 @@ $(function () {
                         textarea.value = content.xml;
                     }
                 });
-            //console.log(colors.green.bold("Saved ") + "xml");
 
         } catch (err) {
-            //console.log(colors.red.bold("Error: ") + err.message);
             console.error('Error happened saving XML: ', err);
         }
     }, 500);
