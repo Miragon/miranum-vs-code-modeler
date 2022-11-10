@@ -6,12 +6,12 @@ import {
     CamundaPlatformPropertiesProviderModule,
     ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
+
+// Propertie Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
+import miragonProviderModule from '../PropertieProvider/provider/index';
 import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
-
-//default diagram
-import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
 // css
 import './app.css';
@@ -21,7 +21,10 @@ import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
 import '../../node_modules/@bpmn-io/element-template-chooser/dist/element-template-chooser.css';
 
-// element templates
+//default diagram
+import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
+
+// example element template
 import sendMail from '../../examples/element-templates/mail-task-template.json';
 
 // Only for developing
@@ -29,6 +32,7 @@ const ENVIROMENTS = {
     Browser: 'browser',
     VsCode: 'vscode'
 };
+// Browser modelling is not supported
 const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
@@ -42,8 +46,10 @@ if (ENV === 'vscode') {
     const state = vscode.getState();
     if (state) {
         // here get the files
+        //forms needs to be on window layer, so we can work with it in FormSimpProps
         files = JSON.parse(state.files);
-        templates = files[1];
+        templates = files[0];
+        window.forms = files[1];
     }
 
 } else if (ENV === 'browser') {
@@ -92,7 +98,9 @@ const modeler = new BpmnModeler({
         CamundaPlatformBehaviors,
         // element templates
         ElementTemplatesPropertiesProviderModule,
-        ElementTemplateChooserModule
+        ElementTemplateChooserModule,
+        // form simplifier
+        miragonProviderModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors
@@ -115,20 +123,16 @@ async function importDiagram(xml) {
     }
 
     try {
-
         await modeler.importXML(xml);
-
         container
             .removeClass('with-error')
             .addClass('with-diagram');
     } catch (err) {
-
         container
             .removeClass('with-diagram')
             .addClass('with-error');
 
         container.find('.error pre').text(err.message);
-
         console.error(err);
     }
 }
@@ -163,7 +167,6 @@ $(function () {
     const updateExtension = debounce(async function () {
 
         try {
-
             exportDiagram()
                 .then((content) => {
                     if (ENV === 'vscode') {
@@ -189,16 +192,14 @@ $(function () {
 });
 
 
-// helpers //////////////////////
+//  ---------------HELPERS---------------  \\
 function debounce(fn, timeout) {
-
     let timer;
 
     return function () {
         if (timer) {
             clearTimeout(timer);
         }
-
         timer = setTimeout(fn, timeout);
     };
 }
