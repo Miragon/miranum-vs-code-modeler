@@ -12,7 +12,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public constructor(
         private readonly context: vscode.ExtensionContext
-    ) { }
+    ) {    }
 
     /**
      * Called when the custom editor / source file is opened
@@ -23,9 +23,11 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     public async resolveCustomTextEditor(
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
-        token: vscode.CancellationToken): Promise<void>
-    {
+        token: vscode.CancellationToken
+        ): Promise<void> {
+
         let isUpdateFromWebview = false;
+        let isBuffer = false;
 
         webviewPanel.webview.options = {
             enableScripts: true
@@ -45,22 +47,64 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 case BpmnModeler.viewType + '.updateFromWebview':
                     isUpdateFromWebview = true;
                     this.updateTextDocument(document, event.content);
+                    break;
             }
         });
 
-        const updateWebview = () => {
-            webviewPanel.webview.postMessage({
-                type: BpmnModeler.viewType + '.updateFromExtension',
-                text: document.getText()
-            });
+        const updateWebview = (msgType: string) => {
+            if (webviewPanel.visible) {
+                webviewPanel.webview.postMessage({
+                    type: msgType,
+                    text: document.getText()
+                })
+                    .then((result) => {
+                        if (result) {
+                            // ...
+                        }
+                    }, (reason) => {
+                        if (!document.isClosed) {
+                            console.error('BPMN Modeler:', reason);
+                        }
+                    });
+            }
         };
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
             if (event.document.uri.toString() === document.uri.toString() && event.contentChanges.length !== 0) {
-                if (!isUpdateFromWebview) {
-                    updateWebview();
+                if (!webviewPanel.visible) {
+                    isBuffer = true;
+                    return;
                 }
-                isUpdateFromWebview = false;
+
+                switch (event.reason) {
+                    case 1: {
+                        updateWebview(BpmnModeler.viewType + '.undo');
+                        break;
+                    }
+                    case 2: {
+                        updateWebview(BpmnModeler.viewType + '.redo');
+                        break;
+                    }
+                    case undefined: {
+                        if (!isUpdateFromWebview) {
+                            updateWebview(BpmnModeler.viewType + '.updateFromExtension');
+                        }
+                        isUpdateFromWebview = false;
+                        break;
+                    }
+                }
+            }
+        });
+
+        webviewPanel.onDidChangeViewState(() => {
+            switch (true) {
+                case webviewPanel.visible: {
+                    if (isBuffer) {
+                        updateWebview(BpmnModeler.viewType + '.updateFromExtension');
+                        isBuffer = false;
+                    }
+                    break;
+                }
             }
         });
 
