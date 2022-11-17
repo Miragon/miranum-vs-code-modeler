@@ -3,7 +3,7 @@
   "displayName": "DigiWF: BPMN Modeler",
   "description": "Edit bpmn files inside VS Code.",
   "license": "Apache License 2.0",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "miragon-gmbh",
   "repository": {
     "type": "git",
@@ -15,8 +15,9 @@
   "engines": {
     "vscode": "^1.72.0"
   },
-  "icon": "images/BPMNModeler.png",
+  "icon": "images/bpmnModeler_logo.png",
   "categories": [
+    "Visualization",
     "Other"
   ],
   "activationEvents": [
@@ -39,7 +40,9 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "publish": "vsce publish",
+    "vscode:prepublish": "npm run build",
+    "build": "tsup src/extension.ts --dts --external=vscode && vite build --config ./web/vite.config.js",
     "web": "vite build --config web/vite.config.js",
     "web-dev": "vite build --config web/vite.config.js --watch",
     "ext": "tsup src/extension.ts --dts --external=vscode --sourcemap",
