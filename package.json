@@ -40,6 +40,7 @@
     ]
   },
   "scripts": {
+    "publish": "vsce publish",
     "vscode:prepublish": "npm run build",
     "build": "tsup src/extension.ts --dts --external=vscode && vite build --config ./web/vite.config.js",
     "web": "vite build --config web/vite.config.js",
