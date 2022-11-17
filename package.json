@@ -3,7 +3,7 @@
   "displayName": "DigiWF: BPMN Modeler",
   "description": "Edit bpmn files inside VS Code.",
   "license": "Apache License 2.0",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "miragon-gmbh",
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   },
   "icon": "images/bpmnModeler_logo.png",
   "categories": [
+    "Visualization",
     "Other"
   ],
   "activationEvents": [
