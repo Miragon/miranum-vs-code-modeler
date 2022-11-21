@@ -71,11 +71,12 @@ export class FileSystemScanner {
             .then((files) => {
                 const formKeys = new Array<string>;
                 files.forEach((result) => {
-                    const file = result.replace(/\s/g, '');
-                    if(file.includes('{"key":"')) {
-                        const start = file.indexOf('{"key":"') + 8;
-                        const end = file.indexOf('","schema":{"type":');
-                        formKeys.push(file.substring(start, end));
+                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z1-9]+","schema":{/g);
+                    if (substr) {
+                        const key = substr[0];
+                        const start = 8;
+                        const end = key.indexOf('","schema":{');
+                        formKeys.push(key.substring(start, end));
                     }
                 });
                 return formKeys;

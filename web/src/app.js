@@ -45,11 +45,10 @@ if (ENV === 'vscode') {
     // 'vscode' is set before we load this script
     const state = vscode.getState();
     if (state) {
-        // here get the files
-        //forms needs to be on window layer, so we can work with it in FormSimpProps
         files = JSON.parse(state.files);
+        // here get the files
         templates = files[0];
-        window.forms = files[1];
+        window.forms = files[1]; //forms needs to be on window layer, so we can work with it in FormSimpProps
     }
 
 } else if (ENV === 'browser') {
@@ -111,7 +110,7 @@ container.removeClass('with-diagram');
 
 async function importDiagram(xml) {
 
-    if (!xml) {
+    if (!xml || xml === '""') {
         xml = EMPTY_DIAGRAM_XML;
     }
 
