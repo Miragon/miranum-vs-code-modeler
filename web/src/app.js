@@ -7,10 +7,10 @@ import {
     ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
 
-// Propertie Extensions
+// Property Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
-import miragonProviderModule from '../PropertieProvider/provider/index';
+import miragonProviderModule from '../lib/PropertieProvider/provider/index';
 import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
 
 // css
@@ -38,7 +38,7 @@ const ENV = ENVIROMENTS.VsCode;
 const container = $('#js-drop-zone');
 let templates;
 
-// for env === borwser
+// for env === browser
 let textarea;
 
 if (ENV === 'vscode') {
