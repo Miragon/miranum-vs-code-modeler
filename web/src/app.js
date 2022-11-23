@@ -36,6 +36,7 @@ const ENVIROMENTS = {
 const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
+let files;
 let templates;
 
 // for env === browser
@@ -117,6 +118,7 @@ async function importDiagram(xml) {
     if (ENV === 'vscode') {
         // Set state when diagram is opened
         vscode.setState({
+            ...vscode.getState(),
             text: xml
         });
     }
@@ -171,7 +173,8 @@ $(function () {
                     if (ENV === 'vscode') {
                         // Set state when changes occur
                         vscode.setState({
-                            text: content.xml
+                            ...vscode.getState(),
+                            text: content.xml,
                         });
                         // Send update to extension
                         vscode.postMessage({

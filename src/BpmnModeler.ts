@@ -173,10 +173,13 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
               
               <script type="text/javascript" nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
-                vscode.setState({
-                  text: '${JSON.stringify(initialContent)}',
-                  files: '${JSON.stringify(files)}'    // serialize files-Array
-                });
+                const state = vscode.getState();
+                if (!state) {
+                    vscode.setState({
+                      text: '${JSON.stringify(initialContent)}',
+                      files: '${JSON.stringify(files)}'    // serialize files-Array
+                    });
+                }
               </script>
               <script type="text/javascript" src="${scriptApp}" nonce="${nonce}"></script>
             </body>
