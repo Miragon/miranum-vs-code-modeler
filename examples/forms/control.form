@@ -1,5 +1,5 @@
 {
-    "key": "ApprovementForm",
+    "key": "Approvement_Form",
     "schema": {
         "key": "MyStartForm",
         "type": "object",

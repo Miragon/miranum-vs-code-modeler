@@ -71,7 +71,7 @@ export class FileSystemScanner {
             .then((files) => {
                 const formKeys = new Array<string>;
                 files.forEach((result) => {
-                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z1-9]+","schema":{/g);
+                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_\.-]+","schema":{/g);
                     if (substr) {
                         const key = substr[0];
                         const start = 8;
