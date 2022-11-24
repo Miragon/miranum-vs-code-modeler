@@ -28,7 +28,7 @@ export class FileSystemScanner {
      */
     public getElementTemplates(): Thenable<Array<JSON>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
-        return this.getResultsAsJson(this.readFile(uri));
+        return this.getResultsAsJson(this.readFile(uri, 'json'));
     }
 
     /**
@@ -36,7 +36,7 @@ export class FileSystemScanner {
      */
     public getForms(): Thenable<Array<string>> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getFormKeys(this.readFile(uri));
+        return this.getFormKeys(this.readFile(uri, 'form'));
     }
 
 
@@ -71,7 +71,7 @@ export class FileSystemScanner {
             .then((files) => {
                 const formKeys = new Array<string>;
                 files.forEach((result) => {
-                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_\.-]+","schema":{/g);
+                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
                     if (substr) {
                         const key = substr[0];
                         const start = 8;
@@ -86,19 +86,24 @@ export class FileSystemScanner {
     /**
      * Read files and returns their content as a Thenable
      * @param directory Path where the files are
+     * @param fileExtension File extension of the files we want to read
      * @returns Thenable with the content of the read files
      * @private
      */
-    private readFile(directory: vscode.Uri): Thenable<Awaited<string>[]> {
+    private readFile(directory: vscode.Uri, fileExtension: string): Thenable<Awaited<string>[]> {
         return this.fs.readDirectory(directory)
             .then((files) => {
                 const promises: Array<Thenable<string>> = [];
                 files.forEach((file) => {
-                    const fileUri = vscode.Uri.joinPath(directory, file[0]);
-                    promises.push(this.fs.readFile(fileUri)
-                        .then((content) => {
-                            return Buffer.from(content).toString('utf-8');
-                        }));
+                    const regExp = /(?:\.([^.]+))?$/;
+                    const extension = regExp.exec(file[0]);
+                    if (extension && extension[1] === fileExtension && file[1] === vscode.FileType.File) {
+                        const fileUri = vscode.Uri.joinPath(directory, file[0]);
+                        promises.push(this.fs.readFile(fileUri)
+                            .then((content) => {
+                                return Buffer.from(content).toString('utf-8');
+                            }));
+                    }
                 });
                 return Promise.all(promises);
             });
