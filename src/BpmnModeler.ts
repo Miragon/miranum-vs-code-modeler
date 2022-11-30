@@ -130,6 +130,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             extensionUri, 'dist', 'client', 'assets', 'bpmn-font', 'css', 'bpmn.css'
         ));
 
+        const styleSimulation = webview.asWebviewUri(vscode.Uri.joinPath(
+            extensionUri, 'dist', 'client', 'assets', 'bpmn-js-token-simulation', 'css', 'bpmn-js-token-simulation.css'
+        ));
+
         const nonce = this.getNonce();
 
         return `
@@ -149,6 +153,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <link href="${styleReset}" rel="stylesheet" type="text/css" />
                 <link href="${styleApp}" rel="stylesheet" type="text/css" />
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
+                <link href="${styleSimulation}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
             </head>
