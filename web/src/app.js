@@ -12,6 +12,7 @@ import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-plat
 import camundaModdleDescriptors from 'camunda-bpmn-moddle/resources/camunda';
 import miragonProviderModule from '../lib/PropertieProvider/provider/index';
 import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
+import TokenSimulationModule from 'bpmn-js-token-simulation';
 
 // css
 import './app.css';
@@ -100,7 +101,9 @@ const modeler = new BpmnModeler({
         ElementTemplatesPropertiesProviderModule,
         ElementTemplateChooserModule,
         // form simplifier
-        miragonProviderModule
+        miragonProviderModule,
+        // simulator
+        TokenSimulationModule
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors
