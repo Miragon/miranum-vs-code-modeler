@@ -1,6 +1,6 @@
 {
-  "name": "vs-code-bpmn-modeler",
-  "displayName": "DigiWF: BPMN Modeler",
+  "name": "miranum-bpmn-modeler",
+  "displayName": "Miranum: BPMN Modeler",
   "description": "Edit bpmn files inside VS Code.",
   "license": "Apache License 2.0",
   "version": "0.1.3",

@@ -35,7 +35,7 @@
 ### Quickstart
 ```shell
 git clone https://github.com/FlowSquad/vs-code-bpmn-modeler.git
-cd vs-code-bpmn-modeler
+cd miranum-bpmn-modeler
 ```
 ```shell
 npm install
