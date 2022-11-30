@@ -22,8 +22,8 @@ import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
 import '../../node_modules/@bpmn-io/element-template-chooser/dist/element-template-chooser.css';
 
-//default diagram
-import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
+//default diagram - relative from dist
+import EMPTY_DIAGRAM_XML from './resources/bpmn/empty.bpmn?raw';
 
 // example element template
 import sendMail from '../../examples/element-templates/mail-task-template.json';
