@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import {FileSystemScanner} from "./lib/FileSystemScanner";
+import {Workspace} from "./types";
+import {TextDecoder} from "util";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -29,16 +31,40 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         let isUpdateFromWebview = false;
         let isBuffer = false;
 
-        webviewPanel.webview.options = {
-            enableScripts: true
-        };
+        webviewPanel.webview.options = { enableScripts: true };
 
-        const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
-        fileSystemScanner.getAllFiles()
-            .then((result) => {
-                webviewPanel.webview.html =
-                    this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), result);
-            });
+        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
+        try {
+            const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
+            fileSystemScanner.getAllFiles()
+                .then((result) => {
+                    const files: Array<JSON[] | string[]> = [];
+                    result.forEach((file) => {
+                        if (file.status === 'fulfilled') {
+                            files.push(file.value);
+                        }
+                    });
+                    webviewPanel.webview.html =
+                        this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), files);
+                }, (reason) => {
+                    if (reason === "No directories found!") {
+                        webviewPanel.webview.html =
+                            this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
+                    }
+                });
+        } catch (error) {
+            console.log('Miranum Modeler:', 'File \"process-ide.json\" is missing!');
+            webviewPanel.webview.html =
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
+        }
+
+        async function getWorkspace() {
+            return vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'))
+                .then((content) => {
+                    const workspaceFolder: Workspace = JSON.parse(new TextDecoder().decode(content)).workspace;
+                    return workspaceFolder;
+                });
+        }
 
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
@@ -112,7 +138,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: Array<Array<JSON | string>>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: Array<JSON[] | string[]>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -128,10 +154,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const fontBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'assets', 'bpmn-font', 'css', 'bpmn.css'
-        ));
-
-        const styleSimulation = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'bpmn-js-token-simulation', 'css', 'bpmn-js-token-simulation.css'
         ));
 
         const nonce = this.getNonce();
@@ -153,7 +175,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <link href="${styleReset}" rel="stylesheet" type="text/css" />
                 <link href="${styleApp}" rel="stylesheet" type="text/css" />
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
-                <link href="${styleSimulation}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
             </head>
