@@ -137,7 +137,9 @@ export class FileSystemScanner {
     private async readFile(directory: vscode.Uri, fileExtension: string): Promise<Awaited<string>[]> {
         const promises: Array<Thenable<string>> = [];
 
-        /** TODO What should happen if one file creates an error? */
+        // TODO
+        //  1. What should happen if one file creates an error?
+        //  2. Add error handling if promise rejects
 
         const results = await this.fs.readDirectory(directory);
         results.forEach((result) => {
