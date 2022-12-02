@@ -36,36 +36,30 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         try {
             const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
-            fileSystemScanner.getAllFiles()
-                .then((result) => {
-                    const files: Array<JSON[] | string[]> = [];
-                    result.forEach((file) => {
-                        if (file.status === 'fulfilled') {
-                            files.push(file.value);
-                        }
-                    });
-                    webviewPanel.webview.html =
-                        this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), files);
-                }, (reason) => {
-                    if (reason === "No directories found!") {
-                        webviewPanel.webview.html =
-                            this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
-                    }
-                });
+            const fileContent: any[] = [];
+            const files = await fileSystemScanner.getAllFiles();
+            (await files).forEach((file) => {
+                if (file.status === 'fulfilled') {
+                    fileContent.push(file.value);
+                }
+                webviewPanel.webview.html =
+                    this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), fileContent);
+            });
         } catch (error) {
-            console.log('Miranum Modeler:', 'File \"process-ide.json\" is missing!');
+            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
             webviewPanel.webview.html =
                 this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
         }
 
         async function getWorkspace() {
-            return vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'))
-                .then((content) => {
-                    const workspaceFolder: Workspace = JSON.parse(new TextDecoder().decode(content)).workspace;
-                    return workspaceFolder;
-                });
+            try {
+                const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'));
+                const workspaceFolder: Workspace = JSON.parse(new TextDecoder().decode(file)).workspace;
+                return workspaceFolder;
+            } catch(error) {
+                throw new Error('File \"process-ide.json\" could not be found!');
+            }
         }
-
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {

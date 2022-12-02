@@ -17,14 +17,15 @@ export class FileSystemScanner {
     /**
      * Get all available files.
      */
-    public getAllFiles(): Thenable<Array<PromiseSettledResult<Awaited<Thenable<JSON[]> | Thenable<string[]>>>>> {
-        return this.fs.readDirectory(this.projectUri)
-            .then((result) => {
-                const promises: Array<Thenable<JSON[]> | Thenable<string[]>> = [];
-                result.forEach((directory) => {
-                    if (directory[1] === vscode.FileType.Directory) {
-                        // Which directories are available?
-                        switch (directory[0]) {
+    public async getAllFiles(): Promise<Promise<PromiseSettledResult<JSON[] | string[]>[]>> {
+        const promises: Array<Promise<JSON[]> | Promise<string[]>> = [];
+        try {
+            const results = await this.fs.readDirectory(this.projectUri);
+            results.forEach((result) => {
+                if (result[1] === vscode.FileType.Directory) {
+                    // Which directories are available?
+                    try {
+                        switch (result[0]) {
                             case this.workspaceFolder.processConfigs: {
                                 // promises.push(this.getConfigs());
                                 break;
@@ -38,12 +39,21 @@ export class FileSystemScanner {
                                 break;
                             }
                         }
+                    } catch (error) {
+                        throw new Error('' + error);
                     }
-                });
-                return Promise.allSettled(promises);
-            }, () => {
-                return Promise.reject('No directories found!');
+                }
             });
+
+            if (promises.length === 0) {
+                throw new Error('No relevant files were found!');
+            }
+
+            return Promise.allSettled(promises);
+
+        } catch (error) {
+            throw new Error(' getAllFiles() -> ' + error);
+        }
     }
 
     /**
@@ -57,7 +67,7 @@ export class FileSystemScanner {
             try {
                 fileContent.push(this.getResultAsJson(file));
             } catch (error) {
-                console.log('FileSystemScanner.getElementTemplates() -> ' + error);
+                throw new Error(' getElementTemplates() -> ' + error);
             }
         });
 
@@ -75,7 +85,7 @@ export class FileSystemScanner {
             try {
                 fileContent.push(this.getFormKey(file));
             } catch (error) {
-                console.log('FileSystemScanner.getForms() -> ' + error);
+                console.log(' getForms() -> ' + error);
             }
         });
 
@@ -86,24 +96,24 @@ export class FileSystemScanner {
 //     -----------------------------HELPERS-----------------------------     \\
 
     /**
-     * Converts the content of a thenable from string to json
-     * @returns an array of json objects
+     * Parse given string to a json object
      * @private
      * @param content
+     * @returns a json object
      */
     private getResultAsJson(content: string): JSON {
         try {
             return JSON.parse(content);
         } catch (error) {
-            throw new Error('FileSystemScanner.getResultAsJson() -> ' + error);
+            throw new Error(' getResultAsJson() -> ' + error);
         }
     }
 
     /**
-     * searches for all form keys from the given files
-     * @returns a string array, with all form Keys
+     * Searches for the form key of a given file
      * @private
      * @param content
+     * @returns the form key as string
      */
     private getFormKey(content: string): string {
         const substr = content.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
@@ -113,15 +123,15 @@ export class FileSystemScanner {
             const end = key.indexOf('","schema":{');
             return key.substring(start, end);
         } else {
-            throw new Error('FileSystemScanner.getFormKey() -> ' + 'Form key could not be found!');
+            throw new Error(' getFormKey() -> ' + 'Form key could not be found!');
         }
     }
 
     /**
-     * Read files and returns their content as a Thenable
-     * @param directory Path where the files are
-     * @param fileExtension File extension of the files we want to read
-     * @returns Thenable with the content of the read files
+     * Read files and returns their content
+     * @param directory Path to the desired files
+     * @param fileExtension File extension of the desired files
+     * @returns Promise that resolve to the string value of the read files
      * @private
      */
     private async readFile(directory: vscode.Uri, fileExtension: string): Promise<Awaited<string>[]> {
