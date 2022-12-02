@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import {TextDecoder} from "util";
 import {Workspace} from "../types";
 
 /**
@@ -63,24 +62,24 @@ export class FileSystemScanner {
         });
 
         return Promise.resolve(fileContent);
-
-        /*
-        return this.readFile(uri, 'json')
-            .then((result) => {
-                return this.getResultAsJson(result);
-            });
-         */
     }
 
     /**
      * Get forms from the current working directory
      */
-    public getForms(): Thenable<string[]> {
+    public async getForms(): Promise<string[]> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.readFile(uri, 'form')
-            .then((result) => {
-                return this.getFormKeys(result);
-            });
+        const files = await this.readFile(uri, 'form');
+        const fileContent: string[] = [];
+        files.forEach((file) => {
+            try {
+                fileContent.push(this.getFormKey(file));
+            } catch (error) {
+                console.log('FileSystemScanner.getForms() -> ' + error);
+            }
+        });
+
+        return Promise.resolve(fileContent);
     }
 
 
@@ -98,37 +97,24 @@ export class FileSystemScanner {
         } catch (error) {
             throw new Error('FileSystemScanner.getResultAsJson() -> ' + error);
         }
-        /*
-        const fileContentAsJson: JSON[] = [];
-        fileContent.forEach((content) => {
-            try {
-                fileContentAsJson.push(JSON.parse(content));
-            } catch (error) {
-                console.log('FileSystemScanner:', error);
-            }
-        });
-        return fileContentAsJson;
-         */
     }
 
     /**
      * searches for all form keys from the given files
      * @returns a string array, with all form Keys
      * @private
-     * @param fileContent
+     * @param content
      */
-    private getFormKeys(fileContent: string[]): string[] {
-        const formKeys: string[] = [];
-        fileContent.forEach((content) => {
-            const substr = content.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
-            if (substr) {
-                const key = substr[0];
-                const start = 8;
-                const end = key.indexOf('","schema":{');
-                formKeys.push(key.substring(start, end));
-            }
-        });
-        return formKeys;
+    private getFormKey(content: string): string {
+        const substr = content.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
+        if (substr) {
+            const key = substr[0];
+            const start = 8;
+            const end = key.indexOf('","schema":{');
+            return key.substring(start, end);
+        } else {
+            throw new Error('FileSystemScanner.getFormKey() -> ' + 'Form key could not be found!');
+        }
     }
 
     /**
@@ -139,17 +125,20 @@ export class FileSystemScanner {
      * @private
      */
     private async readFile(directory: vscode.Uri, fileExtension: string): Promise<Awaited<string>[]> {
-        const results = await this.fs.readDirectory(directory);
         const promises: Array<Thenable<string>> = [];
+
+        /** TODO What should happen if one file creates an error? */
+
+        const results = await this.fs.readDirectory(directory);
         results.forEach((result) => {
             if (result[1] === vscode.FileType.File) {   // only files
                 const regExp = /(?:\.([^.]+))?$/;
                 const extension = regExp.exec(result[0]);
-                if (extension && extension[1] === fileExtension) {
+                if (extension && extension[1] === fileExtension) {  // only files with given file extension
                     const fileUri = vscode.Uri.joinPath(directory, result[0]);
                     const file = this.fs.readFile(fileUri);
                     promises.push(file.then((content) => {
-                        return Buffer.from(content).toString('utf-8');
+                        return Buffer.from(content).toString('utf-8');  // convert Uint8Array to string
                     }));
                 }
             }
