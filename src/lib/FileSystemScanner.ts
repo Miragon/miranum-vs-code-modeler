@@ -50,12 +50,26 @@ export class FileSystemScanner {
     /**
      * Get element templates from the current working directory
      */
-    public getElementTemplates(): Thenable<JSON[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
+    public async getElementTemplates(): Promise<JSON[]> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
+        const files = await this.readFile(uri, 'json');
+        const fileContent: JSON[] = [];
+        files.forEach((file) => {
+            try {
+                fileContent.push(this.getResultAsJson(file));
+            } catch (error) {
+                console.log('FileSystemScanner.getElementTemplates() -> ' + error);
+            }
+        });
+
+        return Promise.resolve(fileContent);
+
+        /*
         return this.readFile(uri, 'json')
             .then((result) => {
-                return this.getResultsAsJson(result);
+                return this.getResultAsJson(result);
             });
+         */
     }
 
     /**
@@ -70,16 +84,21 @@ export class FileSystemScanner {
     }
 
 
-
 //     -----------------------------HELPERS-----------------------------     \\
 
     /**
      * Converts the content of a thenable from string to json
      * @returns an array of json objects
      * @private
-     * @param fileContent
+     * @param content
      */
-    private getResultsAsJson(fileContent: string[]): JSON[] {
+    private getResultAsJson(content: string): JSON {
+        try {
+            return JSON.parse(content);
+        } catch (error) {
+            throw new Error('FileSystemScanner.getResultAsJson() -> ' + error);
+        }
+        /*
         const fileContentAsJson: JSON[] = [];
         fileContent.forEach((content) => {
             try {
@@ -89,6 +108,7 @@ export class FileSystemScanner {
             }
         });
         return fileContentAsJson;
+         */
     }
 
     /**
@@ -129,37 +149,12 @@ export class FileSystemScanner {
                     const fileUri = vscode.Uri.joinPath(directory, result[0]);
                     const file = this.fs.readFile(fileUri);
                     promises.push(file.then((content) => {
-                            return Buffer.from(content).toString('utf-8');
-                        }));
+                        return Buffer.from(content).toString('utf-8');
+                    }));
                 }
             }
         });
 
         return Promise.all(promises);
-
-
-        /*
-        return this.fs.readDirectory(directory)
-            .then((results) => {
-                const promises: Array<Thenable<string>> = [];
-                results.forEach((result) => {
-                    if (result[1] === vscode.FileType.File) {   // only files
-                        const regExp = /(?:\.([^.]+))?$/;
-                        const extension = regExp.exec(result[0]);
-                        if (extension && extension[1] === fileExtension) {
-                            const fileUri = vscode.Uri.joinPath(directory, result[0]);
-                            promises.push(this.fs.readFile(fileUri)
-                                .then((content) => {
-                                    return Buffer.from(content).toString('utf-8');
-                                }));
-                        }
-                    }
-                });
-                return Promise.all(promises);
-            }, (reason) => {
-                console.log('FileSystemScanner:', directory.toString(), 'not found!');
-                return Promise.reject(reason);
-            });
-         */
     }
 }
