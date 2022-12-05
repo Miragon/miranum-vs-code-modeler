@@ -61,13 +61,14 @@ export class FileSystemScanner {
      */
     public async getElementTemplates(): Promise<JSON[]> {
         const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
-        const files = await this.readFile(uri, 'json');
         const fileContent: JSON[] = [];
+
+        const files = await this.readFile(uri, 'json');
         files.forEach((file) => {
             try {
                 fileContent.push(this.getResultAsJson(file));
             } catch (error) {
-                throw new Error(' getElementTemplates() -> ' + error);
+                console.log('getElementTemplates() -> ' + error);
             }
         });
 
@@ -79,13 +80,14 @@ export class FileSystemScanner {
      */
     public async getForms(): Promise<string[]> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        const files = await this.readFile(uri, 'form');
         const fileContent: string[] = [];
+
+        const files = await this.readFile(uri, 'form');
         files.forEach((file) => {
             try {
                 fileContent.push(this.getFormKey(file));
             } catch (error) {
-                console.log(' getForms() -> ' + error);
+                console.log('getForms() -> ' + error);
             }
         });
 
