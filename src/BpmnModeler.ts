@@ -36,15 +36,15 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         try {
             const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
-            const fileContent: any[] = [];
+            const fileContent: Array<JSON[] | string[]> = [];
             const files = await fileSystemScanner.getAllFiles();
-            (await files).forEach((file) => {
+            files.forEach((file) => {
                 if (file.status === 'fulfilled') {
                     fileContent.push(file.value);
                 }
-                webviewPanel.webview.html =
-                    this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), fileContent);
             });
+            webviewPanel.webview.html =
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), fileContent);
         } catch (error) {
             console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
             webviewPanel.webview.html =
@@ -193,6 +193,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
               <script type="text/javascript" nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
                 const state = vscode.getState();
+                console.log('setState:', ${JSON.stringify(files)})
                 if (!state) {
                     vscode.setState({
                       text: '${JSON.stringify(initialContent)}',
