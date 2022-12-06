@@ -139,7 +139,6 @@ async function importDiagram(xml) {
         container.find('.error pre').text(err.message);
         console.error(err);
     }
-    addWatermark();
 }
 
 async function exportDiagram() {
@@ -208,16 +207,4 @@ function debounce(fn, timeout) {
         }
         timer = setTimeout(fn, timeout);
     };
-}
-
-function addWatermark() {
-    const overlays = modeler.get('overlays');
-    overlays.add('SCAN_OK', {
-        position: {
-            bottom: 0,
-            right: 0
-        },
-        html: '<div>Mixed up the labels?</div>'
-    });
-    //overlays.remove({ element: 'SCAN_OK' });
 }

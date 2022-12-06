@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import {FileSystemScanner} from "./lib/FileSystemScanner";
 
+import "./BpmnModeler.css";
+
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = 'bpmn-modeler';
@@ -134,6 +136,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             extensionUri, 'dist', 'client', 'assets', 'bpmn-js-token-simulation', 'css', 'bpmn-js-token-simulation.css'
         ));
 
+        const waterMark = webview.asWebviewUri(vscode.Uri.joinPath(
+            extensionUri, 'images', 'bpmnModeler_logo.png'
+        ));
+
         const nonce = this.getNonce();
 
         return `
@@ -159,7 +165,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             </head>
             <body>
               <div class="content with-diagram" id="js-drop-zone">
-
+                
                 <div class="message error">
                   <div class="note">
                     <p>Ooops, we could not display the BPMN 2.0 diagram.</p>
@@ -170,9 +176,15 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     </div>
                   </div>
                 </div>
-
+                
                 <div class="canvas" id="js-canvas"></div>
-                <div class="properties-panel-parent" id="js-properties-panel"></div>
+                <div class="properties-panel-parent" id="js-properties-panel">
+                    <a href="https://github.com/FlowSquad/vs-code-bpmn-modeler" 
+                    style="size: 30px; align-content: center; background: black;">
+                      <img src="${waterMark}" alt="Miranum" width="30" height="30"/>
+                      <label style="font-size: 30px">Miranum</label>
+                    </a>
+                </div>
               </div>
               
               <script type="text/javascript" nonce="${nonce}">
