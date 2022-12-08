@@ -21,8 +21,9 @@ import '../../node_modules/bpmn-js/dist/assets/diagram-js.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/properties-panel.css';
 import '../../node_modules/bpmn-js-properties-panel/dist/assets/element-templates.css';
 import '../../node_modules/@bpmn-io/element-template-chooser/dist/element-template-chooser.css';
+import '../../node_modules/bpmn-js-token-simulation/assets/css/bpmn-js-token-simulation.css';
 
-//default diagram
+//default diagram - relative from dist
 import EMPTY_DIAGRAM_XML from '../../resources/bpmn/empty.bpmn?raw';
 
 // example element template
@@ -47,10 +48,20 @@ if (ENV === 'vscode') {
     // 'vscode' is set before we load this script
     const state = vscode.getState();
     if (state) {
-        files = JSON.parse(state.files);
-        // here get the files
-        templates = files[0];
-        window.forms = files[1]; //forms needs to be on window layer, so we can work with it in FormSimpProps
+        if (state.files !== 'undefined') {
+            files = JSON.parse(state.files);
+            console.log('app.js', files);
+            // here get the files
+            templates = files[0];
+            window.forms = files[1]; //forms needs to be on window layer, so we can work with it in FormSimpProps
+            console.log('templates:', templates);
+            console.log('forms', window.forms);
+        } else {
+            console.log('undefined');
+            files = 'undefined';
+            templates = [];
+            window.forms = [];
+        }
     }
 
 } else if (ENV === 'browser') {
