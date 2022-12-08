@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import {FileSystemScanner} from "./lib/FileSystemScanner";
+import {TextEditor} from "./util/TextEditor";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -12,7 +13,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public constructor(
         private readonly context: vscode.ExtensionContext
-    ) {    }
+    ) {
+        // Register the command for toggling the standard vscode text editor.
+        TextEditor.register(context);
+        context.subscriptions.push(vscode.commands.registerCommand('bpmn-modeler.toggleTextEditor', () => {
+                TextEditor.toggle()
+            }
+        ));
+    }
 
     /**
      * Called when the custom editor / source file is opened
@@ -32,6 +40,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.options = {
             enableScripts: true
         };
+
+        TextEditor.document = document;
 
         const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
         fileSystemScanner.getAllFiles()
