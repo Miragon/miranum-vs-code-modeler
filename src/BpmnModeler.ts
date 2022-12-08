@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import {FileSystemScanner} from "./lib/FileSystemScanner";
 import {Workspace} from "./types";
-import {TextDecoder} from "util";
+
+type FilesContent = {
+    configs: JSON[] | string[],
+    elementTemplates: JSON[] | string[],
+    forms: JSON[] | string[]
+};
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -36,11 +41,43 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         try {
             const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
-            const fileContent: Array<JSON[] | string[]> = [];
+            const fileContent: FilesContent = {
+                configs: [],
+                elementTemplates: [],
+                forms: []
+            };
             const files = await fileSystemScanner.getAllFiles();
-            files.forEach((file) => {
+            files.forEach((file, index) => {
                 if (file.status === 'fulfilled') {
-                    fileContent.push(file.value);
+                    switch (index) {
+                        case 0: {
+                            fileContent.configs = file.value;
+                            break;
+                        }
+                        case 1: {
+                            fileContent.elementTemplates = file.value;
+                            break;
+                        }
+                        case 2: {
+                            fileContent.forms = file.value;
+                            break;
+                        }
+                    }
+                } else {
+                    switch (index) {
+                        case 0: {
+                            fileContent.configs = [];
+                            break;
+                        }
+                        case 1: {
+                            fileContent.elementTemplates = [];
+                            break;
+                        }
+                        case 2: {
+                            fileContent.forms = [];
+                            break;
+                        }
+                    }
                 }
             });
             webviewPanel.webview.html =
@@ -54,7 +91,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         async function getWorkspace() {
             try {
                 const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'));
-                const workspaceFolder: Workspace = JSON.parse(new TextDecoder().decode(file)).workspace;
+                const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspaceFolder;
             } catch(error) {
                 throw new Error('File \"process-ide.json\" could not be found!');
@@ -132,7 +169,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: Array<JSON[] | string[]>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: FilesContent) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -193,7 +230,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
               <script type="text/javascript" nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
                 const state = vscode.getState();
-                console.log('setState:', ${JSON.stringify(files)})
                 if (!state) {
                     vscode.setState({
                       text: '${JSON.stringify(initialContent)}',

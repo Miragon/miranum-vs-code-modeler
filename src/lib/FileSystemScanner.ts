@@ -17,81 +17,77 @@ export class FileSystemScanner {
     /**
      * Get all available files.
      */
-    public async getAllFiles(): Promise<Promise<PromiseSettledResult<JSON[] | string[]>[]>> {
+    public async getAllFiles(): Promise<PromiseSettledResult<JSON[] | string[]>[]> {
         const promises: Array<Promise<JSON[]> | Promise<string[]>> = [];
         try {
-            const results = await this.fs.readDirectory(this.projectUri);
-            results.forEach((result) => {
-                if (result[1] === vscode.FileType.Directory) {
-                    // Which directories are available?
-                    try {
-                        switch (result[0]) {
-                            case this.workspaceFolder.processConfigs: {
-                                // promises.push(this.getConfigs());
-                                break;
-                            }
-                            case this.workspaceFolder.elementTemplates: {
-                                promises.push(this.getElementTemplates());
-                                break;
-                            }
-                            case this.workspaceFolder.forms: {
-                                promises.push(this.getForms());
-                                break;
-                            }
-                        }
-                    } catch (error) {
-                        throw new Error('' + error);
-                    }
+            promises.push(this.getConfigs());
+            promises.push(this.getElementTemplates());
+            promises.push(this.getForms());
+
+        } catch (error) {
+            throw new Error('getAllFiles() -> ' + error);
+        }
+
+        if (promises.length === 0) {
+            throw new Error('No relevant files were found!');
+        }
+
+        return Promise.allSettled(promises);
+    }
+
+    public async getConfigs(): Promise<JSON[]> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.processConfigs);
+        return this.getFilesAsJson(uri, 'json');
+    };
+
+    public async getElementTemplates(): Promise<JSON []> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
+        return this.getFilesAsJson(uri, 'json');
+    }
+
+    /**
+     * Get content of json files
+     * @returns a promise with an array of json objects or an empty array
+     */
+    private async getFilesAsJson(uri: vscode.Uri, fileExt: string): Promise<JSON[]> {
+        const fileContent: JSON[] = [];
+        try {
+            const files = await this.readFile(uri, fileExt);
+            files.forEach((file) => {
+                try {
+                    fileContent.push(this.getResultAsJson(file));
+                } catch (error) {
+                    console.log('getElementTemplates() -> ' + error);
                 }
             });
 
-            if (promises.length === 0) {
-                throw new Error('No relevant files were found!');
-            }
-
-            return Promise.allSettled(promises);
-
+            return Promise.resolve(fileContent);
         } catch (error) {
-            throw new Error(' getAllFiles() -> ' + error);
+            return Promise.resolve([]);
         }
     }
 
     /**
-     * Get element templates from the current working directory
-     */
-    public async getElementTemplates(): Promise<JSON[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
-        const fileContent: JSON[] = [];
-
-        const files = await this.readFile(uri, 'json');
-        files.forEach((file) => {
-            try {
-                fileContent.push(this.getResultAsJson(file));
-            } catch (error) {
-                console.log('getElementTemplates() -> ' + error);
-            }
-        });
-
-        return Promise.resolve(fileContent);
-    }
-
-    /**
      * Get forms from the current working directory
+     * @returns a promise with an array of strings or an empty array
      */
     public async getForms(): Promise<string[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.forms);
         const fileContent: string[] = [];
+        try {
+            const files = await this.readFile(uri, 'form');
+            files.forEach((file) => {
+                try {
+                    fileContent.push(this.getFormKey(file));
+                } catch (error) {
+                    console.log('getForms() -> ' + error);
+                }
+            });
 
-        const files = await this.readFile(uri, 'form');
-        files.forEach((file) => {
-            try {
-                fileContent.push(this.getFormKey(file));
-            } catch (error) {
-                console.log('getForms() -> ' + error);
-            }
-        });
-
-        return Promise.resolve(fileContent);
+            return Promise.resolve(fileContent);
+        } catch (error) {
+            return Promise.resolve([]);
+        }
     }
 
 
@@ -107,7 +103,7 @@ export class FileSystemScanner {
         try {
             return JSON.parse(content);
         } catch (error) {
-            throw new Error(' getResultAsJson() -> ' + error);
+            throw new Error('getResultAsJson() -> ' + error);
         }
     }
 
@@ -125,7 +121,7 @@ export class FileSystemScanner {
             const end = key.indexOf('","schema":{');
             return key.substring(start, end);
         } else {
-            throw new Error(' getFormKey() -> ' + 'Form key could not be found!');
+            throw new Error('getFormKey() -> ' + 'Form key could not be found!');
         }
     }
 
@@ -143,21 +139,25 @@ export class FileSystemScanner {
         //  1. What should happen if one file creates an error?
         //  2. Add error handling if promise rejects
 
-        const results = await this.fs.readDirectory(directory);
-        results.forEach((result) => {
-            if (result[1] === vscode.FileType.File) {   // only files
-                const regExp = /(?:\.([^.]+))?$/;
-                const extension = regExp.exec(result[0]);
-                if (extension && extension[1] === fileExtension) {  // only files with given file extension
-                    const fileUri = vscode.Uri.joinPath(directory, result[0]);
-                    const file = this.fs.readFile(fileUri);
-                    promises.push(file.then((content) => {
-                        return Buffer.from(content).toString('utf-8');  // convert Uint8Array to string
-                    }));
+        try {
+            const results = await this.fs.readDirectory(directory);
+            results.forEach((result) => {
+                if (result[1] === vscode.FileType.File) {   // only files
+                    const regExp = /(?:\.([^.]+))?$/;
+                    const extension = regExp.exec(result[0]);
+                    if (extension && extension[1] === fileExtension) {  // only files with given file extension
+                        const fileUri = vscode.Uri.joinPath(directory, result[0]);
+                        const file = this.fs.readFile(fileUri);
+                        promises.push(file.then((content) => {
+                            return Buffer.from(content).toString('utf-8');  // convert Uint8Array to string
+                        }));
+                    }
                 }
-            }
-        });
+            });
 
-        return Promise.all(promises);
+            return Promise.all(promises);
+        } catch (error) {
+            return Promise.reject('Directory not found!');
+        }
     }
 }
