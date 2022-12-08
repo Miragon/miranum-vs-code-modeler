@@ -50,12 +50,9 @@ if (ENV === 'vscode') {
     if (state) {
         if (state.files !== 'undefined') {
             files = JSON.parse(state.files);
-            console.log('app.js', files);
             // here get the files
             templates = files[0];
             window.forms = files[1]; //forms needs to be on window layer, so we can work with it in FormSimpProps
-            console.log('templates:', templates);
-            console.log('forms', window.forms);
         } else {
             console.log('undefined');
             files = 'undefined';

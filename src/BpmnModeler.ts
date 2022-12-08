@@ -193,7 +193,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
               <script type="text/javascript" nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
                 const state = vscode.getState();
-                console.log('setState:', ${JSON.stringify(files)})
                 if (!state) {
                     vscode.setState({
                       text: '${JSON.stringify(initialContent)}',
