@@ -39,8 +39,8 @@ const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let files;
-let templates;
 let configs;
+let templates;
 
 // for env === browser
 let textarea;
@@ -50,15 +50,12 @@ if (ENV === 'vscode') {
     const state = vscode.getState();
     if (state) {
         if (state.files !== 'undefined') {
-            console.log(state.files);
             files = JSON.parse(state.files);
             // here get the files
-            console.log(files);
             configs = files.configs;
             templates = files.elementTemplates;
             window.forms = files.forms; //forms needs to be on window layer, so we can work with it in FormSimpProps
         } else {
-            console.log('undefined');
             files = 'undefined';
             configs = [];
             templates = [];

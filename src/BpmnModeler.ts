@@ -1,12 +1,6 @@
 import * as vscode from 'vscode';
 import {FileSystemScanner} from "./lib/FileSystemScanner";
-import {Workspace} from "./types";
-
-type FilesContent = {
-    configs: JSON[] | string[],
-    elementTemplates: JSON[] | string[],
-    forms: JSON[] | string[]
-};
+import {Workspace, FilesContent} from "./types";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -41,47 +35,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         try {
             const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
-            const fileContent: FilesContent = {
-                configs: [],
-                elementTemplates: [],
-                forms: []
-            };
-            const files = await fileSystemScanner.getAllFiles();
-            files.forEach((file, index) => {
-                if (file.status === 'fulfilled') {
-                    switch (index) {
-                        case 0: {
-                            fileContent.configs = file.value;
-                            break;
-                        }
-                        case 1: {
-                            fileContent.elementTemplates = file.value;
-                            break;
-                        }
-                        case 2: {
-                            fileContent.forms = file.value;
-                            break;
-                        }
-                    }
-                } else {
-                    switch (index) {
-                        case 0: {
-                            fileContent.configs = [];
-                            break;
-                        }
-                        case 1: {
-                            fileContent.elementTemplates = [];
-                            break;
-                        }
-                        case 2: {
-                            fileContent.forms = [];
-                            break;
-                        }
-                    }
-                }
-            });
+            const filesContent: FilesContent = await fileSystemScanner.getAllFiles();
             webviewPanel.webview.html =
-                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), fileContent);
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), filesContent);
+
         } catch (error) {
             console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
             webviewPanel.webview.html =
@@ -94,7 +51,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspaceFolder;
             } catch(error) {
-                throw new Error('File \"process-ide.json\" could not be found!');
+                throw new Error('getWorkspace() -> ' + error);
             }
         }
 
