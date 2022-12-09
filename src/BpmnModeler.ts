@@ -17,7 +17,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         // Register the command for toggling the standard vscode text editor.
         TextEditor.register(context);
         context.subscriptions.push(vscode.commands.registerCommand('bpmn-modeler.toggleTextEditor', () => {
-                TextEditor.toggle()
+                TextEditor.toggle();
             }
         ));
     }
@@ -107,6 +107,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         webviewPanel.onDidChangeViewState(() => {
             switch (true) {
+                case webviewPanel.active: {
+                    TextEditor.document = document;
+                    /* falls through */
+                }
                 case webviewPanel.visible: {
                     if (isBuffer) {
                         updateWebview(BpmnModeler.viewType + '.updateFromExtension');
