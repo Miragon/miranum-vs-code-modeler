@@ -54,7 +54,6 @@ if (ENV === 'vscode') {
             templates = files[0];
             window.forms = files[1]; //forms needs to be on window layer, so we can work with it in FormSimpProps
         } else {
-            console.log('undefined');
             files = 'undefined';
             templates = [];
             window.forms = [];
