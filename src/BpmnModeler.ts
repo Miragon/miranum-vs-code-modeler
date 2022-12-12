@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import {FileSystemScanner} from "./lib/FileSystemScanner";
 import {Workspace, FilesContent} from "./types";
-import {TextEditor} from "./util/TextEditor";
+import {FileSystemScanner} from "./lib/FileSystemScanner";
+import {TextEditor} from "./lib/TextEditor";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
