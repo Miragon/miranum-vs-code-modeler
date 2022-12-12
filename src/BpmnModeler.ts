@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
+import {Workspace, FilesContent} from "./types";
 import {FileSystemScanner} from "./lib/FileSystemScanner";
-import {Workspace} from "./types";
-import {TextDecoder} from "util";
-import {TextEditor} from "./util/TextEditor";
+import {TextEditor} from "./lib/TextEditor";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -45,15 +44,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         try {
             const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
-            const fileContent: Array<JSON[] | string[]> = [];
-            const files = await fileSystemScanner.getAllFiles();
-            files.forEach((file) => {
-                if (file.status === 'fulfilled') {
-                    fileContent.push(file.value);
-                }
-            });
+            const filesContent: FilesContent = await fileSystemScanner.getAllFiles();
             webviewPanel.webview.html =
-                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), fileContent);
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), filesContent);
+
         } catch (error) {
             console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
             webviewPanel.webview.html =
@@ -63,10 +57,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         async function getWorkspace() {
             try {
                 const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'));
-                const workspaceFolder: Workspace = JSON.parse(new TextDecoder().decode(file)).workspace;
+                const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspaceFolder;
             } catch(error) {
-                throw new Error('File \"process-ide.json\" could not be found!');
+                throw new Error('getWorkspace() -> ' + error);
             }
         }
 
@@ -145,7 +139,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: Array<JSON[] | string[]>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: FilesContent) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'

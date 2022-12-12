@@ -39,6 +39,7 @@ const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let files;
+let configs;
 let templates;
 
 // for env === browser
@@ -51,10 +52,12 @@ if (ENV === 'vscode') {
         if (state.files !== 'undefined') {
             files = JSON.parse(state.files);
             // here get the files
-            templates = files[0];
-            window.forms = files[1]; //forms needs to be on window layer, so we can work with it in FormSimpProps
+            configs = files.configs;
+            templates = files.elementTemplates;
+            window.forms = files.forms; //forms needs to be on window layer, so we can work with it in FormSimpProps
         } else {
             files = 'undefined';
+            configs = [];
             templates = [];
             window.forms = [];
         }
