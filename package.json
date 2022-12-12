@@ -21,7 +21,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCustomEditor:bpmn-modeler"
+    "onCustomEditor:bpmn-modeler",
+    "onCommand:bpmn-modeler.toggleTextEditor"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -37,7 +38,29 @@
         ],
         "priority": "default"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "bpmn-modeler.toggleTextEditor",
+        "title": "Miranum: Toggle Standard Text Editor",
+        "icon": "$(notebook-mimetype)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "bpmn-modeler.toggleTextEditor",
+          "when": "resourceExtname == .bpmn"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "bpmn-modeler.toggleTextEditor",
+          "group": "navigation",
+          "when": "resourceExtname == .bpmn"
+        }
+      ]
+    }
   },
   "scripts": {
     "publish": "vsce publish",
