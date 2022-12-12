@@ -38,7 +38,7 @@ export abstract class TextEditor {
 
                     this.isOpen = false;
                 }
-            })
+            });
         });
 
         context.subscriptions.push(changeConfig, changeTab);
@@ -62,7 +62,7 @@ export abstract class TextEditor {
                                 // open new text editor with new document
                                 this.openTextEditor(document);
                             }
-                        })
+                        });
                 }
             }
             this._document = document;
