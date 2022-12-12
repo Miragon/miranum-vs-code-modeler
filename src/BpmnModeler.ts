@@ -36,6 +36,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         ): Promise<void> {
 
         let isUpdateFromWebview = false;
+        let isUpdateFromExtension = false;
         let isBuffer = false;
 
         webviewPanel.webview.options = { enableScripts: true };
@@ -67,8 +68,11 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
                 case BpmnModeler.viewType + '.updateFromWebview':
-                    isUpdateFromWebview = true;
-                    this.updateTextDocument(document, event.content);
+                    if (!isUpdateFromExtension) {
+                        isUpdateFromWebview = true;
+                        this.updateTextDocument(document, event.content);
+                    }
+                    isUpdateFromExtension = false;
                     break;
             }
         });
@@ -100,15 +104,18 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
                 switch (event.reason) {
                     case 1: {
+                        isUpdateFromExtension = true;
                         updateWebview(BpmnModeler.viewType + '.undo');
                         break;
                     }
                     case 2: {
+                        isUpdateFromExtension = true;
                         updateWebview(BpmnModeler.viewType + '.redo');
                         break;
                     }
                     case undefined: {
                         if (!isUpdateFromWebview) {
+                            isUpdateFromExtension = true;
                             updateWebview(BpmnModeler.viewType + '.updateFromExtension');
                         }
                         isUpdateFromWebview = false;
