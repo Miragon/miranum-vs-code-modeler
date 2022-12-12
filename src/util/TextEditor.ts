@@ -146,7 +146,7 @@ export abstract class TextEditor {
         switch (this.config) {
             case 'Group': {
                 return {
-                    preserveFocus: false,
+                    preserveFocus: true,
                     preview: true,
                     viewColumn: vscode.ViewColumn.Beside
                 };
