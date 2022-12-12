@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import {Workspace} from "../types";
 
 /**
  * Scan the current working directory for important files.
@@ -8,104 +9,155 @@ export class FileSystemScanner {
     private readonly fs = vscode.workspace.fs;
 
     constructor(
-        private readonly projectUri: vscode.Uri
+        private readonly projectUri: vscode.Uri,
+        private readonly workspaceFolder: Workspace
     ) {
     }
 
     /**
-     * Get all possible file types.
+     * Get all available files.
      */
-    public getAllFiles(): Promise<Awaited<Array<JSON> | Array<string>>[]> {
-        const thenables = [
-            this.getElementTemplates(),
-            this.getForms()
-        ];
-        return Promise.all(thenables);
+    public async getAllFiles(): Promise<Promise<PromiseSettledResult<JSON[] | string[]>[]>> {
+        const promises: Array<Promise<JSON[]> | Promise<string[]>> = [];
+        try {
+            const results = await this.fs.readDirectory(this.projectUri);
+            results.forEach((result) => {
+                if (result[1] === vscode.FileType.Directory) {
+                    // Which directories are available?
+                    try {
+                        switch (result[0]) {
+                            case this.workspaceFolder.processConfigs: {
+                                // promises.push(this.getConfigs());
+                                break;
+                            }
+                            case this.workspaceFolder.elementTemplates: {
+                                promises.push(this.getElementTemplates());
+                                break;
+                            }
+                            case this.workspaceFolder.forms: {
+                                promises.push(this.getForms());
+                                break;
+                            }
+                        }
+                    } catch (error) {
+                        throw new Error('' + error);
+                    }
+                }
+            });
+
+            if (promises.length === 0) {
+                throw new Error('No relevant files were found!');
+            }
+
+            return Promise.allSettled(promises);
+
+        } catch (error) {
+            throw new Error(' getAllFiles() -> ' + error);
+        }
     }
 
     /**
      * Get element templates from the current working directory
      */
-    public getElementTemplates(): Thenable<Array<JSON>> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
-        return this.getResultsAsJson(this.readFile(uri, 'json'));
+    public async getElementTemplates(): Promise<JSON[]> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
+        const fileContent: JSON[] = [];
+
+        const files = await this.readFile(uri, 'json');
+        files.forEach((file) => {
+            try {
+                fileContent.push(this.getResultAsJson(file));
+            } catch (error) {
+                console.log('getElementTemplates() -> ' + error);
+            }
+        });
+
+        return Promise.resolve(fileContent);
     }
 
     /**
      * Get forms from the current working directory
      */
-    public getForms(): Thenable<Array<string>> {
+    public async getForms(): Promise<string[]> {
         const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getFormKeys(this.readFile(uri, 'form'));
-    }
+        const fileContent: string[] = [];
 
+        const files = await this.readFile(uri, 'form');
+        files.forEach((file) => {
+            try {
+                fileContent.push(this.getFormKey(file));
+            } catch (error) {
+                console.log('getForms() -> ' + error);
+            }
+        });
+
+        return Promise.resolve(fileContent);
+    }
 
 
 //     -----------------------------HELPERS-----------------------------     \\
 
     /**
-     * Converts the content of a thenable from string to json
-     * @param thenable The thenable whose results are to be converted to json
-     * @returns Thenable with an array of json objects
+     * Parse given string to a json object
      * @private
+     * @param content
+     * @returns a json object
      */
-    private getResultsAsJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
-        return thenable
-            .then((results) => {
-                const files: Array<JSON> = [];
-                results.forEach((result) => {
-                    files.push(JSON.parse(result));
-                });
-                return files;
-            });
+    private getResultAsJson(content: string): JSON {
+        try {
+            return JSON.parse(content);
+        } catch (error) {
+            throw new Error(' getResultAsJson() -> ' + error);
+        }
     }
 
     /**
-     * searches for all form keys from the given files
-     * @param thenable The thenable whose result is to be filtered
-     * @returns a string array, with all form Keys
+     * Searches for the form key of a given file
      * @private
+     * @param content
+     * @returns the form key as string
      */
-    private getFormKeys(thenable: Thenable<Awaited<string>[]>): Thenable<Array<string>> {
-        return thenable
-            .then((files) => {
-                const formKeys = new Array<string>;
-                files.forEach((result) => {
-                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
-                    if (substr) {
-                        const key = substr[0];
-                        const start = 8;
-                        const end = key.indexOf('","schema":{');
-                        formKeys.push(key.substring(start, end));
-                    }
-                });
-                return formKeys;
-            });
+    private getFormKey(content: string): string {
+        const substr = content.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
+        if (substr) {
+            const key = substr[0];
+            const start = 8;
+            const end = key.indexOf('","schema":{');
+            return key.substring(start, end);
+        } else {
+            throw new Error(' getFormKey() -> ' + 'Form key could not be found!');
+        }
     }
 
     /**
-     * Read files and returns their content as a Thenable
-     * @param directory Path where the files are
-     * @param fileExtension File extension of the files we want to read
-     * @returns Thenable with the content of the read files
+     * Read files and returns their content
+     * @param directory Path to the desired files
+     * @param fileExtension File extension of the desired files
+     * @returns Promise that resolve to the string value of the read files
      * @private
      */
-    private readFile(directory: vscode.Uri, fileExtension: string): Thenable<Awaited<string>[]> {
-        return this.fs.readDirectory(directory)
-            .then((files) => {
-                const promises: Array<Thenable<string>> = [];
-                files.forEach((file) => {
-                    const regExp = /(?:\.([^.]+))?$/;
-                    const extension = regExp.exec(file[0]);
-                    if (extension && extension[1] === fileExtension && file[1] === vscode.FileType.File) {
-                        const fileUri = vscode.Uri.joinPath(directory, file[0]);
-                        promises.push(this.fs.readFile(fileUri)
-                            .then((content) => {
-                                return Buffer.from(content).toString('utf-8');
-                            }));
-                    }
-                });
-                return Promise.all(promises);
-            });
+    private async readFile(directory: vscode.Uri, fileExtension: string): Promise<Awaited<string>[]> {
+        const promises: Array<Thenable<string>> = [];
+
+        // TODO
+        //  1. What should happen if one file creates an error?
+        //  2. Add error handling if promise rejects
+
+        const results = await this.fs.readDirectory(directory);
+        results.forEach((result) => {
+            if (result[1] === vscode.FileType.File) {   // only files
+                const regExp = /(?:\.([^.]+))?$/;
+                const extension = regExp.exec(result[0]);
+                if (extension && extension[1] === fileExtension) {  // only files with given file extension
+                    const fileUri = vscode.Uri.joinPath(directory, result[0]);
+                    const file = this.fs.readFile(fileUri);
+                    promises.push(file.then((content) => {
+                        return Buffer.from(content).toString('utf-8');  // convert Uint8Array to string
+                    }));
+                }
+            }
+        });
+
+        return Promise.all(promises);
     }
 }

@@ -13,3 +13,9 @@ type VscState = {
     text: string;
     files: string;
 };
+
+export type Workspace = {
+    processConfigs: string;
+    elementTemplates: string;
+    forms: string;
+};

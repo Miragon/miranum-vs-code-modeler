@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import {FileSystemScanner} from "./lib/FileSystemScanner";
+import {Workspace} from "./types";
+import {TextDecoder} from "util";
 import {TextEditor} from "./util/TextEditor";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
@@ -37,19 +39,36 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         let isUpdateFromWebview = false;
         let isBuffer = false;
 
-        webviewPanel.webview.options = {
-            enableScripts: true
-        };
-
+        webviewPanel.webview.options = { enableScripts: true };
         TextEditor.document = document;
 
-        const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
-        fileSystemScanner.getAllFiles()
-            .then((result) => {
-                webviewPanel.webview.html =
-                    this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), result);
+        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
+        try {
+            const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
+            const fileContent: Array<JSON[] | string[]> = [];
+            const files = await fileSystemScanner.getAllFiles();
+            files.forEach((file) => {
+                if (file.status === 'fulfilled') {
+                    fileContent.push(file.value);
+                }
             });
+            webviewPanel.webview.html =
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), fileContent);
+        } catch (error) {
+            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
+            webviewPanel.webview.html =
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
+        }
 
+        async function getWorkspace() {
+            try {
+                const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'));
+                const workspaceFolder: Workspace = JSON.parse(new TextDecoder().decode(file)).workspace;
+                return workspaceFolder;
+            } catch(error) {
+                throw new Error('File \"process-ide.json\" could not be found!');
+            }
+        }
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
@@ -126,7 +145,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: Array<Array<JSON | string>>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: Array<JSON[] | string[]>) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -142,10 +161,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const fontBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'assets', 'bpmn-font', 'css', 'bpmn.css'
-        ));
-
-        const styleSimulation = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'bpmn-js-token-simulation', 'css', 'bpmn-js-token-simulation.css'
         ));
 
         const nonce = this.getNonce();
@@ -167,7 +182,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <link href="${styleReset}" rel="stylesheet" type="text/css" />
                 <link href="${styleApp}" rel="stylesheet" type="text/css" />
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
-                <link href="${styleSimulation}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
             </head>
