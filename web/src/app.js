@@ -180,6 +180,8 @@ $(function () {
         window.addEventListener('message', (event) => {
             const message = event.data;
             switch (message.type) {
+                case 'bpmn-modeler.undo':
+                case 'bpmn-modeler.redo':
                 case 'bpmn-modeler.updateFromExtension': {
                     const xml = message.text;
                     importDiagram(xml);
