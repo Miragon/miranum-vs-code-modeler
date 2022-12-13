@@ -14,14 +14,19 @@ export default defineConfig({
       fileName: 'client',
     },
     outDir: 'dist/client',
-    rollupOptions: {},
+    rollupOptions: {
+      external: [
+          //'../../resources/**',
+          //'../../examples/**'
+      ]
+    },
     minify: 'esbuild',
   },
   plugins: [
     viteStaticCopy({
       targets: [
-        {src: 'node_modules/bpmn-js/dist/assets/bpmn-font/', dest: 'assets/'},
-        {src: 'node_modules/bpmn-js-token-simulation/assets/css/', dest:'assets/bpmn-js-token-simulation/'}
+        {src: 'node_modules/bpmn-js/dist/assets/bpmn-font/css/**', dest: 'assets/bpmn-font/css/'},
+        {src: 'node_modules/bpmn-js/dist/assets/bpmn-font/font/**', dest: 'assets/bpmn-font/font/'}
       ]
     })
   ],

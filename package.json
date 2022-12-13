@@ -3,7 +3,7 @@
   "displayName": "Miranum: Modeler",
   "description": "Edit bpmn and dmn files inside VS Code.",
   "license": "Apache License 2.0",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "publisher": "miragon-gmbh",
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCustomEditor:bpmn-modeler"
+    "onCustomEditor:bpmn-modeler",
+    "onCommand:bpmn-modeler.toggleTextEditor"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -37,7 +38,29 @@
         ],
         "priority": "default"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "bpmn-modeler.toggleTextEditor",
+        "title": "Miranum: Toggle Standard Text Editor",
+        "icon": "$(notebook-mimetype)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "bpmn-modeler.toggleTextEditor",
+          "when": "resourceExtname == .bpmn"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "bpmn-modeler.toggleTextEditor",
+          "group": "navigation",
+          "when": "resourceExtname == .bpmn"
+        }
+      ]
+    }
   },
   "scripts": {
     "publish": "vsce publish",
@@ -51,11 +74,11 @@
   },
   "dependencies": {
     "@bpmn-io/element-template-chooser": "^0.1.0",
-    "@bpmn-io/properties-panel": "^0.23.0",
+    "@bpmn-io/properties-panel": "^1.0.1",
     "bpmn-js": "^10.2.0",
     "bpmn-js-properties-panel": "^1.9.0",
     "bpmn-js-token-simulation": "^0.28.0",
-    "camunda-bpmn-js-behaviors": "^0.3.0",
+    "camunda-bpmn-js-behaviors": "^0.4.0",
     "camunda-bpmn-moddle": "^7.0.1",
     "jquery": "^3.6.1",
     "min-dash": "^4.0.0"

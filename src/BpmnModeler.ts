@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
+import {Workspace, FilesContent} from "./types";
 import {FileSystemScanner} from "./lib/FileSystemScanner";
-
-import "./BpmnModeler.css";
+import {TextEditor} from "./lib/TextEditor";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -14,7 +14,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public constructor(
         private readonly context: vscode.ExtensionContext
-    ) {    }
+    ) {
+        // Register the command for toggling the standard vscode text editor.
+        TextEditor.register(context);
+        context.subscriptions.push(vscode.commands.registerCommand('bpmn-modeler.toggleTextEditor', () => {
+                TextEditor.toggle();
+            }
+        ));
+    }
 
     /**
      * Called when the custom editor / source file is opened
@@ -29,25 +36,43 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         ): Promise<void> {
 
         let isUpdateFromWebview = false;
+        let isUpdateFromExtension = false;
         let isBuffer = false;
 
-        webviewPanel.webview.options = {
-            enableScripts: true
-        };
+        webviewPanel.webview.options = { enableScripts: true };
+        TextEditor.document = document;
 
-        const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
-        fileSystemScanner.getAllFiles()
-            .then((result) => {
-                webviewPanel.webview.html =
-                    this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), result);
-            });
+        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
+        try {
+            const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
+            const filesContent: FilesContent = await fileSystemScanner.getAllFiles();
+            webviewPanel.webview.html =
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), filesContent);
 
+        } catch (error) {
+            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
+            webviewPanel.webview.html =
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
+        }
+
+        async function getWorkspace() {
+            try {
+                const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'));
+                const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
+                return workspaceFolder;
+            } catch(error) {
+                throw new Error('getWorkspace() -> ' + error);
+            }
+        }
 
         webviewPanel.webview.onDidReceiveMessage((event) => {
             switch (event.type) {
                 case BpmnModeler.viewType + '.updateFromWebview':
-                    isUpdateFromWebview = true;
-                    this.updateTextDocument(document, event.content);
+                    if (!isUpdateFromExtension) {
+                        isUpdateFromWebview = true;
+                        this.updateTextDocument(document, event.content);
+                    }
+                    isUpdateFromExtension = false;
                     break;
             }
         });
@@ -79,15 +104,18 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
                 switch (event.reason) {
                     case 1: {
+                        isUpdateFromExtension = true;
                         updateWebview(BpmnModeler.viewType + '.undo');
                         break;
                     }
                     case 2: {
+                        isUpdateFromExtension = true;
                         updateWebview(BpmnModeler.viewType + '.redo');
                         break;
                     }
                     case undefined: {
                         if (!isUpdateFromWebview) {
+                            isUpdateFromExtension = true;
                             updateWebview(BpmnModeler.viewType + '.updateFromExtension');
                         }
                         isUpdateFromWebview = false;
@@ -99,6 +127,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         webviewPanel.onDidChangeViewState(() => {
             switch (true) {
+                case webviewPanel.active: {
+                    TextEditor.document = document;
+                    /* falls through */
+                }
                 case webviewPanel.visible: {
                     if (isBuffer) {
                         updateWebview(BpmnModeler.viewType + '.updateFromExtension');
@@ -114,7 +146,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: Array<Array<JSON | string>>) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: FilesContent) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -130,10 +162,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const fontBpmn = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'assets', 'bpmn-font', 'css', 'bpmn.css'
-        ));
-
-        const styleSimulation = webview.asWebviewUri(vscode.Uri.joinPath(
-            extensionUri, 'dist', 'client', 'assets', 'bpmn-js-token-simulation', 'css', 'bpmn-js-token-simulation.css'
         ));
 
         const waterMark = webview.asWebviewUri(vscode.Uri.joinPath(
@@ -159,13 +187,12 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 <link href="${styleReset}" rel="stylesheet" type="text/css" />
                 <link href="${styleApp}" rel="stylesheet" type="text/css" />
                 <link href="${fontBpmn}" rel="stylesheet" type="text/css" />
-                <link href="${styleSimulation}" rel="stylesheet" type="text/css" />
 
                 <title>Custom Texteditor Template</title>
             </head>
             <body>
               <div class="content with-diagram" id="js-drop-zone">
-                
+
                 <div class="message error">
                   <div class="note">
                     <p>Ooops, we could not display the BPMN 2.0 diagram.</p>
@@ -176,7 +203,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="canvas" id="js-canvas"></div>
                 <div class="properties-panel-parent" id="js-properties-panel">
                     <a href="https://github.com/FlowSquad/miranum-vs-code-modeler" title="Check out our git"

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import {FilesContent, Workspace} from "../types";
 
 /**
  * Scan the current working directory for important files.
@@ -8,104 +9,243 @@ export class FileSystemScanner {
     private readonly fs = vscode.workspace.fs;
 
     constructor(
-        private readonly projectUri: vscode.Uri
+        private readonly projectUri: vscode.Uri,
+        private readonly workspaceFolder: Workspace
     ) {
     }
 
     /**
-     * Get all possible file types.
+     * Get all available files.
      */
-    public getAllFiles(): Promise<Awaited<Array<JSON> | Array<string>>[]> {
-        const thenables = [
-            this.getElementTemplates(),
-            this.getForms()
-        ];
-        return Promise.all(thenables);
-    }
+    public async getAllFiles(): Promise<FilesContent> {
+        const promises: Array<Promise<JSON[]> | Promise<string[]>> = [];
+        promises.push(this.getConfigs());           // index = 0
+        promises.push(this.getElementTemplates());  // index = 1
+        promises.push(this.getForms());             // index = 2
 
-    /**
-     * Get element templates from the current working directory
-     */
-    public getElementTemplates(): Thenable<Array<JSON>> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
-        return this.getResultsAsJson(this.readFile(uri, 'json'));
+        return Promise.allSettled(promises)
+            .then((results) => {
+                const filesContent: FilesContent = {
+                    configs: [],
+                    elementTemplates: [],
+                    forms: []
+                };
+                results.forEach((result, index) => {
+                    if (result.status === 'fulfilled') {
+                        switch (index) {
+                            case 0: {
+                                filesContent.configs = result.value;
+                                break;
+                            }
+                            case 1: {
+                                filesContent.elementTemplates = result.value;
+                                break;
+                            }
+                            case 2: {
+                                filesContent.forms = result.value;
+                                break;
+                            }
+                        }
+                    }
+                });
+                return filesContent;
+            });
     }
 
     /**
      * Get forms from the current working directory
+     * @returns a promise with an array of strings or an empty array
+     * @public
+     * @async
      */
-    public getForms(): Thenable<Array<string>> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
-        return this.getFormKeys(this.readFile(uri, 'form'));
-    }
-
-
-
-//     -----------------------------HELPERS-----------------------------     \\
-
-    /**
-     * Converts the content of a thenable from string to json
-     * @param thenable The thenable whose results are to be converted to json
-     * @returns Thenable with an array of json objects
-     * @private
-     */
-    private getResultsAsJson(thenable: Thenable<Awaited<string>[]>): Thenable<Array<JSON>> {
-        return thenable
-            .then((results) => {
-                const files: Array<JSON> = [];
-                results.forEach((result) => {
-                    files.push(JSON.parse(result));
-                });
-                return files;
+    public async getForms(): Promise<string[]> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.forms);
+        const fileContent: string[] = [];
+        try {
+            const files = await this.readFile(uri, 'form');
+            files.forEach((content, path) => {
+                try {
+                    fileContent.push(this.getFormKey(content));
+                } catch (error) {
+                    const strSplit = path.split("#");
+                    const dir = strSplit[0];
+                    const name = strSplit[1];
+                    vscode.window.showInformationMessage(
+                        'Failed to read form key!' +
+                        ' - Folder: ' + dir +
+                        ' - File: ' + name +
+                        ' - ' + error,
+                        ...['Goto file']
+                    ).then(() => {
+                        const uri = vscode.Uri.joinPath(this.projectUri, dir, name);
+                        vscode.window.showTextDocument(
+                            uri,
+                            {
+                                preserveFocus: false,
+                                preview: false,
+                                viewColumn: vscode.ViewColumn.Active
+                            });
+                    });
+                }
             });
+
+            return Promise.resolve(fileContent);
+        } catch (error) {
+            return Promise.resolve([]);
+        }
     }
 
     /**
-     * searches for all form keys from the given files
-     * @param thenable The thenable whose result is to be filtered
-     * @returns a string array, with all form Keys
-     * @private
+     * Get config files
+     * @returns a promise with the content of the config files or an empty array
+     * @public
+     * @async
      */
-    private getFormKeys(thenable: Thenable<Awaited<string>[]>): Thenable<Array<string>> {
-        return thenable
-            .then((files) => {
-                const formKeys = new Array<string>;
-                files.forEach((result) => {
-                    const substr = result.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
-                    if (substr) {
-                        const key = substr[0];
-                        const start = 8;
-                        const end = key.indexOf('","schema":{');
-                        formKeys.push(key.substring(start, end));
-                    }
-                });
-                return formKeys;
+    public async getConfigs(): Promise<JSON[]> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.processConfigs);
+        return this.getFilesAsJson(uri, 'json');
+    };
+
+    /**
+     * Get element templates
+     * @returns a promise with the content of element templates or an empty array
+     * @public
+     * @async
+     */
+    public async getElementTemplates(): Promise<JSON []> {
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
+        return this.getFilesAsJson(uri, 'json');
+    }
+
+    /**
+     * Get content of json files
+     * @returns a promise with an array of json objects or an empty array
+     * @private
+     * @async
+     */
+    private async getFilesAsJson(uri: vscode.Uri, fileExt: string): Promise<JSON[]> {
+        const fileContent: JSON[] = [];
+        try {
+            const files = await this.readFile(uri, fileExt);
+            files.forEach((content, path) => {
+                try {
+                    fileContent.push(this.getResultAsJson(content));
+                } catch (error) {
+                    const strSplit = path.split("#");
+                    const dir = strSplit[0];
+                    const name = strSplit[1];
+                    vscode.window.showInformationMessage(
+                        'Failed to read json!' +
+                        ' - Folder: ' + dir +
+                        ' - File: ' + name +
+                        ' - ' + error,
+                        ...['Goto file']
+                    ).then(() => {
+                        const uri = vscode.Uri.joinPath(this.projectUri, dir, name);
+                        vscode.window.showTextDocument(
+                            uri,
+                            {
+                                preserveFocus: false,
+                                preview: false,
+                                viewColumn: vscode.ViewColumn.Active
+                            });
+                    });
+                }
             });
+
+            return Promise.resolve(fileContent);
+        } catch (error) {
+            return Promise.resolve([]);
+        }
     }
 
     /**
-     * Read files and returns their content as a Thenable
-     * @param directory Path where the files are
-     * @param fileExtension File extension of the files we want to read
-     * @returns Thenable with the content of the read files
+     * Parse given string to a json object
+     * @param content the file content
+     * @returns a json object
      * @private
      */
-    private readFile(directory: vscode.Uri, fileExtension: string): Thenable<Awaited<string>[]> {
-        return this.fs.readDirectory(directory)
-            .then((files) => {
-                const promises: Array<Thenable<string>> = [];
-                files.forEach((file) => {
+    private getResultAsJson(content: string): JSON {
+        try {
+            return JSON.parse(content);
+        } catch (error) {
+            throw new Error('getResultAsJson() -> ' + error);
+        }
+    }
+
+    /**
+     * Searches for the form key of a given file
+     * @param content the file content
+     * @returns the form key as string
+     * @private
+     */
+    private getFormKey(content: string): string {
+        const substr = content.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
+        if (substr) {
+            const key = substr[0];
+            const start = 8;
+            const end = key.indexOf('","schema":{');
+            return key.substring(start, end);
+        } else {
+            throw new Error('getFormKey() -> ' + 'Form key could not be found!');
+        }
+    }
+
+    /**
+     * Read files and returns their content
+     * @param directory Path to the desired files
+     * @param fileExtension File extension of the desired files
+     * @returns Promise that resolve to the string value of the read files
+     * @private
+     * @async
+     */
+    private async readFile(directory: vscode.Uri, fileExtension: string): Promise<Awaited<Map<string, string>>> {
+        const files: Map<string, Thenable<Uint8Array>> = new Map();
+        const content: Map<string, string> = new Map();
+
+        const dirRoot = directory.toString().replace(
+            this.projectUri.toString(),
+            ''
+        );
+
+        try {
+            const results = await this.fs.readDirectory(directory);
+            results.forEach((result) => {
+                if (result[1] === vscode.FileType.File) {   // only files
                     const regExp = /(?:\.([^.]+))?$/;
-                    const extension = regExp.exec(file[0]);
-                    if (extension && extension[1] === fileExtension && file[1] === vscode.FileType.File) {
-                        const fileUri = vscode.Uri.joinPath(directory, file[0]);
-                        promises.push(this.fs.readFile(fileUri)
-                            .then((content) => {
-                                return Buffer.from(content).toString('utf-8');
-                            }));
+                    const extension = regExp.exec(result[0]);
+                    if (extension && extension[1] === fileExtension) {  // only files with given file extension
+                        const fileUri = vscode.Uri.joinPath(directory, result[0]);
+                        try {
+                            files.set(dirRoot + '/#' + result[0], this.fs.readFile(fileUri));
+                        } catch (error) {
+                            // inform user that a certain file could not be read
+                            vscode.window.showInformationMessage(
+                                'Could not read file!' +
+                                ' - Folder: ' + dirRoot +
+                                ' - File: ' + result[0] +
+                                ' - ' + error
+                            );
+                        }
                     }
-                });
-                return Promise.all(promises);
+                }
             });
+
+            const filePaths = Array.from(files.keys());
+            const testSettled = await Promise.allSettled(files.values());
+            testSettled.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                    content.set(
+                        filePaths[index],
+                        Buffer.from(result.value).toString('utf-8')  // convert Uint8Array to string
+                    );
+                }
+            });
+
+            return Promise.resolve(content);
+
+        } catch (error) {
+            return Promise.reject(new Error('readFile() -> ' + error));
+        }
     }
 }

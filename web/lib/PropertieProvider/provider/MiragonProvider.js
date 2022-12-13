@@ -34,15 +34,17 @@ export default function MiragonProvider(propertiesPanel, translate) {
      */
     return function(groups) {
 
-      // Add own "form" group to StartEvent, and remove old Form property
-      if(is(element, 'bpmn:StartEvent')) {
-        groups.push(createStartFormGroup(element, translate));
-        groups = groups.filter(obj => obj.id !== 'CamundaPlatform__Form')
-      }
-      // Add own "form" group to UserTask, and remove old Form property
-      if(is(element, 'bpmn:UserTask')) {
-        groups.push(createUserFormGroup(element, translate));
-        groups = groups.filter(obj => obj.id !== 'CamundaPlatform__Form')
+      if(window.forms.length > 0) {
+        // Add own "form" group to StartEvent, and remove old Form property
+        if (is(element, 'bpmn:StartEvent')) {
+          groups.push(createStartFormGroup(element, translate));
+          groups = groups.filter(obj => obj.id !== 'CamundaPlatform__Form')
+        }
+        // Add own "form" group to UserTask, and remove old Form property
+        if (is(element, 'bpmn:UserTask')) {
+          groups.push(createUserFormGroup(element, translate));
+          groups = groups.filter(obj => obj.id !== 'CamundaPlatform__Form')
+        }
       }
 
       return groups;
