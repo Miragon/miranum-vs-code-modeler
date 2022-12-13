@@ -179,7 +179,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 
                 <div class="canvas" id="js-canvas"></div>
                 <div class="properties-panel-parent" id="js-properties-panel">
-                    <a href="https://github.com/FlowSquad/vs-code-bpmn-modeler" title="Check out our git"
+                    <a href="https://github.com/FlowSquad/miranum-vs-code-modeler" title="Check out our git"
                     style="display: flex; size: 30px; margin: 2% 0">
                       <img src="${waterMark}" alt="Miranum" width="30" height="30" style="margin-left: 0.5em; margin-right: 0.5em"/>
                       <label style="font-size: 30px; color: #335DE5">Miranum</label>

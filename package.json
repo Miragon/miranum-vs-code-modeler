@@ -1,16 +1,16 @@
 {
-  "name": "miranum-bpmn-modeler",
-  "displayName": "Miranum: BPMN Modeler",
-  "description": "Edit bpmn files inside VS Code.",
+  "name": "miranum-modeler",
+  "displayName": "Miranum: Modeler",
+  "description": "Edit bpmn and dmn files inside VS Code.",
   "license": "Apache License 2.0",
   "version": "0.1.3",
   "publisher": "miragon-gmbh",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FlowSquad/vs-code-bpmn-modeler"
+    "url": "https://github.com/FlowSquad/miranum-vs-code-modeler"
   },
   "bugs": {
-    "url": "https://github.com/FlowSquad/vs-code-bpmn-modeler/issues"
+    "url": "https://github.com/FlowSquad/miranum-vs-code-modeler/issues"
   },
   "engines": {
     "vscode": "^1.72.0"
