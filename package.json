@@ -73,9 +73,9 @@
     "lint": "eslint src --ext ts"
   },
   "dependencies": {
-    "@bpmn-io/element-template-chooser": "^0.1.0",
+    "@bpmn-io/element-template-chooser": "^1.0.0",
     "@bpmn-io/properties-panel": "^1.0.1",
-    "bpmn-js": "^10.2.0",
+    "bpmn-js": "^11.0.0",
     "bpmn-js-properties-panel": "^1.9.0",
     "bpmn-js-token-simulation": "^0.28.0",
     "camunda-bpmn-js-behaviors": "^0.4.0",

@@ -118,8 +118,22 @@ const modeler = new BpmnModeler({
     moddleExtensions: {
         camunda: camundaModdleDescriptors
     },
-    elementTemplates: templates
+    //elementTemplates: templates
 });
+// load templates
+modeler.on('elementTemplates.errors', event => {
+    // const { errors } = event;
+    //
+    // console.error('Failed to parse element templates', errors);
+    // const errorMessage = `Failed to parse element templates:
+    // ${ errors.map(error => error.message).join('\n    ') }
+    // Check the developer tools for details.`;
+    //
+    // document.querySelector('.error-panel pre').textContent = errorMessage;
+    // document.querySelector('.error-panel').classList.toggle('hidden');
+});
+modeler.get('elementTemplatesLoader').setTemplates(templates)
+
 container.removeClass('with-diagram');
 
 async function importDiagram(xml) {
