@@ -17,12 +17,12 @@ jobs:
         run: |
           npm install
           npm install -g vsce
-          vsce package --out vs-code-bpmn-modeler.vsix
+          vsce package --out miranum-vs-code-modeler.vsix
       - name: Upload .vsix to release
         uses: svenstaro/upload-release-action@v2
         with:
-          file: ./vs-code-bpmn-modeler.vsix
-          asset_name: vs-code-bpmn-modeler.vsix
+          file: ./miranum-vs-code-modeler.vsix
+          asset_name: miranum-vs-code-modeler.vsix
           tag: ${{ github.ref }}
           overwrite: true
       - name: Publish extension

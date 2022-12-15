@@ -15,13 +15,13 @@
     <img src="images/logo.png" alt="Logo" height="100">
   </a>
 
-<h3 align="center">Miragon <i>vs-code-bpmn-modeler</i></h3>
+<h3 align="center">Miragon <i>miranum-vs-code-modeler</i></h3>
 
   <p align="center">
     <i></i>
-    <br /><a href="https://github.com/FlowSquad/vs-code-bpmn-modeler/issues">Report Bug</a>
+    <br /><a href="https://github.com/FlowSquad/miranum-vs-code-modeler/issues">Report Bug</a>
     ·
-    <a href="https://github.com/FlowSquad/vs-code-bpmn-modeler/pulls">Request Feature</a>
+    <a href="https://github.com/FlowSquad/miranum-vs-code-modeler/pulls">Request Feature</a>
   </p>
 </div>
 
@@ -91,12 +91,12 @@ Distributed under the Apache License Version 2.0. See [License](LICENSE) file fo
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/FlowSquad/vs-code-bpmn-modeler.svg?style=for-the-badge
-[contributors-url]: https://github.com/FlowSquad/vs-code-bpmn-modeler/graphs/contributors
+[contributors-url]: https://github.com/FlowSquad/miranum-vs-code-modeler/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/FlowSquad/vs-code-bpmn-modeler.svg?style=for-the-badge
-[forks-url]: https://github.com/FlowSquad/vs-code-bpmn-modeler/network/members
+[forks-url]: https://github.com/FlowSquad/miranum-vs-code-modeler/network/members
 [stars-shield]: https://img.shields.io/github/stars/FlowSquad/vs-code-bpmn-modeler.svg?style=for-the-badge
-[stars-url]: https://github.com/FlowSquad/vs-code-bpmn-modeler/stargazers
+[stars-url]: https://github.com/FlowSquad/miranum-vs-code-modeler/stargazers
 [issues-shield]: https://img.shields.io/github/issues/FlowSquad/vs-code-bpmn-modeler.svg?style=for-the-badge
-[issues-url]: https://github.com/FlowSquad/vs-code-bpmn-modeler/issues
+[issues-url]: https://github.com/FlowSquad/miranum-vs-code-modeler/issues
 [license-shield]: https://img.shields.io/github/license/FlowSquad/vs-code-bpmn-modeler.svg?style=for-the-badge
-[license-url]: https://github.com/FlowSquad/vs-code-bpmn-modeler/blob/master/LICENSE
+[license-url]: https://github.com/FlowSquad/miranum-vs-code-modeler/blob/main/LICENSE
