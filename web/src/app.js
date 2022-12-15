@@ -117,22 +117,14 @@ const modeler = new BpmnModeler({
     ],
     moddleExtensions: {
         camunda: camundaModdleDescriptors
-    },
-    //elementTemplates: templates
+    }
 });
-// load templates
+// load templates, and console.error the ones that can't be loaded
 modeler.on('elementTemplates.errors', event => {
-    // const { errors } = event;
-    //
-    // console.error('Failed to parse element templates', errors);
-    // const errorMessage = `Failed to parse element templates:
-    // ${ errors.map(error => error.message).join('\n    ') }
-    // Check the developer tools for details.`;
-    //
-    // document.querySelector('.error-panel pre').textContent = errorMessage;
-    // document.querySelector('.error-panel').classList.toggle('hidden');
+    const { errors } = event;
+    showTemplateErrors(errors);
 });
-modeler.get('elementTemplatesLoader').setTemplates(templates)
+modeler.get('elementTemplatesLoader').setTemplates(templates);
 
 container.removeClass('with-diagram');
 
@@ -233,4 +225,13 @@ function debounce(fn, timeout) {
         }
         timer = setTimeout(fn, timeout);
     };
+}
+
+function showTemplateErrors(errors) {
+    console.error('Failed to parse element templates', errors);
+
+    // document.querySelector('.error-panel pre').textContent = `Failed to parse element templates:
+    //     ${errors.map(error => error.message).join('\n    ')}
+    //     Check the developer tools for details.`;
+    // document.querySelector('.error-panel').classList.toggle('hidden');
 }
