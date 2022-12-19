@@ -15,7 +15,7 @@
   "engines": {
     "vscode": "^1.72.0"
   },
-  "icon": "images/bpmnModeler_logo.png",
+  "icon": "images/komet.png",
   "categories": [
     "Visualization",
     "Other"
