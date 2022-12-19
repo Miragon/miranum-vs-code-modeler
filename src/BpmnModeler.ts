@@ -57,7 +57,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         async function getWorkspace() {
             try {
-                const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'process-ide.json'));
+                const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'miranum.json'));
                 const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspaceFolder;
             } catch(error) {
