@@ -181,11 +181,16 @@ export class FileSystemScanner {
      */
     private getFormKey(content: string): string {
         const substr = content.replace(/\s/g, '').match(/{"key":"[A-Za-z0-9_.-]+","schema":{/g);
+        const substr2 = content.replace(/\s/g, '').match(/{"schema":{.*},"key":"[A-Za-z0-9_.-]+"}/g);
         if (substr) {
             const key = substr[0];
             const start = 8;
             const end = key.indexOf('","schema":{');
             return key.substring(start, end);
+        } else if(substr2) {
+            const key = substr2[0];
+            const start = key.lastIndexOf(`},"key":"`) + 9;
+            return key.substring(start, key.length-2);
         } else {
             throw new Error('getFormKey() -> ' + 'Form key could not be found!');
         }
