@@ -28,4 +28,4 @@ jobs:
       - name: Publish extension
         run: npm run publish
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSCE_PAT: ${{ secrets.VSCE_PUBLISH }}
