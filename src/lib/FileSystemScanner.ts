@@ -102,7 +102,7 @@ export class FileSystemScanner {
      * @async
      */
     public async getConfigs(): Promise<JSON[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.processConfigs);
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.configs);
         return this.getFilesAsJson(uri, 'json');
     };
 
