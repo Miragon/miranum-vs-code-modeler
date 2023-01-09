@@ -61,7 +61,9 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspaceFolder;
             } catch(error) {
-                throw new Error('getWorkspace() -> ' + error);
+                await vscode.workspace.fs.createDirectory(await vscode.Uri.joinPath(projectUri, 'element-templates'));
+                const workspaceFolder: Workspace = {configs: "" , elementTemplates: "element-templates", forms: ""};
+                return workspaceFolder;
             }
         }
 
