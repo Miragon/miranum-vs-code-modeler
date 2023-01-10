@@ -51,8 +51,10 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         } catch (error) {
             console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
+            const fileSystemScanner = new FileSystemScanner(projectUri,{elementTemplates: "element-templates"} )
+            const eTemplates = await fileSystemScanner.getElementTemplates();
             webviewPanel.webview.html =
-                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText());
+                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), {forms: [], elementTemplates: eTemplates, configs: []});
         }
 
         async function getWorkspace() {
@@ -61,9 +63,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspaceFolder;
             } catch(error) {
-                await vscode.workspace.fs.createDirectory(await vscode.Uri.joinPath(projectUri, 'element-templates'));
-                const workspaceFolder: Workspace = {configs: "" , elementTemplates: "element-templates", forms: ""};
-                return workspaceFolder;
+                throw new Error('getWorkspace() -> ' + error);
             }
         }
 
@@ -148,7 +148,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files?: FilesContent) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: FilesContent) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'

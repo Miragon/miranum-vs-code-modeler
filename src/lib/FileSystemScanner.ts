@@ -59,7 +59,7 @@ export class FileSystemScanner {
      * @async
      */
     public async getForms(): Promise<string[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.forms);
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.forms ?? "forms");
         const fileContent: string[] = [];
         try {
             const files = await this.readFile(uri, 'form');
@@ -102,7 +102,7 @@ export class FileSystemScanner {
      * @async
      */
     public async getConfigs(): Promise<JSON[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.configs);
+        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.configs ?? "configs");
         return this.getFilesAsJson(uri, 'json');
     };
 
