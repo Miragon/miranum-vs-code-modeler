@@ -15,9 +15,9 @@ type VscState = {
 };
 
 export interface Workspace {
-    configs?: string;
+    configs: string;
     elementTemplates: string;
-    forms?: string;
+    forms: string;
 }
 
 export interface FilesContent {

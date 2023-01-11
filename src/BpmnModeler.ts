@@ -44,17 +44,30 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         try {
-            const fileSystemScanner = new FileSystemScanner(projectUri, await getWorkspace());
-            const filesContent: FilesContent = await fileSystemScanner.getAllFiles();
-            webviewPanel.webview.html =
-                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), filesContent);
+            const fileSystemScanner = new FileSystemScanner(projectUri);
+            webviewPanel.webview.html = this.getHtmlForWebview(
+                webviewPanel.webview,
+                this.context.extensionUri,
+                document.getText(),
+                await fileSystemScanner.getAllFiles(await getWorkspace())
+            );
 
         } catch (error) {
             console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
-            const fileSystemScanner = new FileSystemScanner(projectUri,{elementTemplates: "element-templates"} )
-            const eTemplates = await fileSystemScanner.getElementTemplates();
-            webviewPanel.webview.html =
-                this.getHtmlForWebview(webviewPanel.webview, this.context.extensionUri, document.getText(), {forms: [], elementTemplates: eTemplates, configs: []});
+
+            // If no workspace configuration is specified, we still want to allow the user to use element templates.
+            // Therefore, the user can create the default "element-templates" folder and place his templates there.
+            const fileSystemScanner = new FileSystemScanner(projectUri);
+            webviewPanel.webview.html = this.getHtmlForWebview(
+                webviewPanel.webview,
+                this.context.extensionUri,
+                document.getText(),
+                {
+                    configs: [],
+                    elementTemplates: await fileSystemScanner.getElementTemplates('element-templates'),
+                    forms: []
+                }
+            );
         }
 
         async function getWorkspace() {

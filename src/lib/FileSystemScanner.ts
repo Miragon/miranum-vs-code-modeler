@@ -10,18 +10,17 @@ export class FileSystemScanner {
 
     constructor(
         private readonly projectUri: vscode.Uri,
-        private readonly workspaceFolder: Workspace
     ) {
     }
 
     /**
      * Get all available files.
      */
-    public async getAllFiles(): Promise<FilesContent> {
+    public async getAllFiles(workspaceConfig: Workspace): Promise<FilesContent> {
         const promises: Array<Promise<JSON[]> | Promise<string[]>> = [];
-        promises.push(this.getConfigs());           // index = 0
-        promises.push(this.getElementTemplates());  // index = 1
-        promises.push(this.getForms());             // index = 2
+        promises.push(this.getConfigs(workspaceConfig.configs));           // index = 0
+        promises.push(this.getElementTemplates(workspaceConfig.elementTemplates));  // index = 1
+        promises.push(this.getForms(workspaceConfig.forms));             // index = 2
 
         return Promise.allSettled(promises)
             .then((results) => {
@@ -58,8 +57,12 @@ export class FileSystemScanner {
      * @public
      * @async
      */
-    public async getForms(): Promise<string[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.forms ?? "forms");
+    public async getForms(path: string): Promise<string[]> {
+        if (!path) {
+            return Promise.resolve([]);
+        }
+
+        const uri = vscode.Uri.joinPath(this.projectUri, path);
         const fileContent: string[] = [];
         try {
             const files = await this.readFile(uri, 'form');
@@ -101,8 +104,11 @@ export class FileSystemScanner {
      * @public
      * @async
      */
-    public async getConfigs(): Promise<JSON[]> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.configs ?? "configs");
+    public async getConfigs(path: string): Promise<JSON[]> {
+        if (!path) {
+            return Promise.resolve([]);
+        }
+        const uri = vscode.Uri.joinPath(this.projectUri, path);
         return this.getFilesAsJson(uri, 'json');
     };
 
@@ -112,8 +118,11 @@ export class FileSystemScanner {
      * @public
      * @async
      */
-    public async getElementTemplates(): Promise<JSON []> {
-        const uri = vscode.Uri.joinPath(this.projectUri, this.workspaceFolder.elementTemplates);
+    public async getElementTemplates(path: string): Promise<JSON []> {
+        if (!path) {
+            return Promise.resolve([]);
+        }
+        const uri = vscode.Uri.joinPath(this.projectUri, path);
         return this.getFilesAsJson(uri, 'json');
     }
 
