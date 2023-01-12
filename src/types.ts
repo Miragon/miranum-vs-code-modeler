@@ -15,7 +15,7 @@ type VscState = {
 };
 
 export interface Workspace {
-    processConfigs: string;
+    configs: string;
     elementTemplates: string;
     forms: string;
 }
