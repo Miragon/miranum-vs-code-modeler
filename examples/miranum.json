@@ -1,10 +1,10 @@
 {
   "projectVersion": "1.0.0",
-  "name": "example-project",
+  "name": "examples",
   "workspace": {
     "forms": "forms",
     "elementTemplates": "element-templates",
-    "configs": ""
+    "configs": "configs"
   },
   "deployment": [
     {
