@@ -2,7 +2,7 @@ name: vsce-publish-extension
 on:
   push:
     tags:
-      - 'vscode-bpmn-modeler-v*'
+      - 'miranum-vs-code-modeler-v*'
 jobs:
   publish-extension:
     runs-on: ubuntu-latest
