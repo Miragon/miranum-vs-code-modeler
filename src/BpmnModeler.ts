@@ -39,6 +39,9 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         let isUpdateFromExtension = false;
         let isBuffer = false;
 
+        // Disable preview mode
+        await vscode.commands.executeCommand('workbench.action.keepEditor');
+
         webviewPanel.webview.options = { enableScripts: true };
         TextEditor.document = document;
 
