@@ -1,54 +1,65 @@
 import * as vscode from "vscode";
-import {FilesContent, Workspace} from "../types";
+import {FilesContent, WorkspaceFolder} from "../types";
+import {Uri} from "vscode";
 
 /**
  * Scan the current working directory for important files.
  */
 export class FileSystemScanner {
-
+    private static instance: FileSystemScanner;
     private readonly fs = vscode.workspace.fs;
 
-    constructor(
+    private constructor(
         private readonly projectUri: vscode.Uri,
     ) {
+    }
+
+    public static createFileSystemScanner(uri: Uri): FileSystemScanner {
+        if (this.instance === undefined) {
+            this.instance = new FileSystemScanner(uri);
+        }
+        return this.instance;
     }
 
     /**
      * Get all available files.
      */
-    public async getAllFiles(workspaceConfig: Workspace): Promise<FilesContent> {
-        const promises: Array<Promise<JSON[]> | Promise<string[]>> = [];
-        promises.push(this.getConfigs(workspaceConfig.configs));           // index = 0
-        promises.push(this.getElementTemplates(workspaceConfig.elementTemplates));  // index = 1
-        promises.push(this.getForms(workspaceConfig.forms));             // index = 2
-
-        return Promise.allSettled(promises)
-            .then((results) => {
-                const filesContent: FilesContent = {
-                    configs: [],
-                    elementTemplates: [],
-                    forms: []
-                };
-                results.forEach((result, index) => {
-                    if (result.status === 'fulfilled') {
-                        switch (index) {
-                            case 0: {
-                                filesContent.configs = result.value;
-                                break;
-                            }
-                            case 1: {
-                                filesContent.elementTemplates = result.value;
-                                break;
-                            }
-                            case 2: {
-                                filesContent.forms = result.value;
-                                break;
-                            }
-                        }
+    public async getAllFiles(workspace: WorkspaceFolder[]): Promise<FilesContent[]> {
+        const promises: Map<string, Promise<JSON[] | string[]>> = new Map();
+        workspace.forEach((folder) => {
+            let ext = folder.extension.substring(folder.extension.indexOf('.') + 1);  // substring after first '.'
+            switch (folder.type) {
+                case 'form': {
+                    // special case because we only need the form-keys and not the whole file
+                    if (!ext) {
+                        ext = 'form';
                     }
+                    promises.set(folder.type, this.getForms(folder.path, ext));
+                    break;
+                }
+                default: {
+                    if (!ext) {
+                        ext = 'json';
+                    }
+                    promises.set(folder.type, this.getFilesAsJson(folder.path, ext));
+                    break;
+                }
+            }
+        });
+
+        const filesContent: FilesContent[] = [];
+        const keys: string[] = Array.from(promises.keys());
+        const settled = await Promise.allSettled(promises.values());
+        settled.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                filesContent.push({
+                    type: keys[index],
+                    content: result.value
                 });
-                return filesContent;
-            });
+            }
+        });
+
+        return Promise.resolve(filesContent);
     }
 
     /**
@@ -57,7 +68,7 @@ export class FileSystemScanner {
      * @public
      * @async
      */
-    public async getForms(path: string): Promise<string[]> {
+    public async getForms(path: string, extension: string): Promise<string[]> {
         if (!path) {
             return Promise.resolve([]);
         }
@@ -65,30 +76,12 @@ export class FileSystemScanner {
         const uri = vscode.Uri.joinPath(this.projectUri, path);
         const fileContent: string[] = [];
         try {
-            const files = await this.readFile(uri, 'form');
+            const files = await this.readFilesOfDir(uri, extension);
             files.forEach((content, path) => {
                 try {
                     fileContent.push(this.getFormKey(content));
                 } catch (error) {
-                    const strSplit = path.split("#");
-                    const dir = strSplit[0];
-                    const name = strSplit[1];
-                    vscode.window.showInformationMessage(
-                        'Failed to read form key!' +
-                        ' - Folder: ' + dir +
-                        ' - File: ' + name +
-                        ' - ' + error,
-                        ...['Goto file']
-                    ).then(() => {
-                        const uri = vscode.Uri.joinPath(this.projectUri, dir, name);
-                        vscode.window.showTextDocument(
-                            uri,
-                            {
-                                preserveFocus: false,
-                                preview: false,
-                                viewColumn: vscode.ViewColumn.Active
-                            });
-                    });
+                    this.showErrorMessage(path, error);
                 }
             });
 
@@ -104,12 +97,8 @@ export class FileSystemScanner {
      * @public
      * @async
      */
-    public async getConfigs(path: string): Promise<JSON[]> {
-        if (!path) {
-            return Promise.resolve([]);
-        }
-        const uri = vscode.Uri.joinPath(this.projectUri, path);
-        return this.getFilesAsJson(uri, 'json');
+    public async getConfigs(path: string, extension: string): Promise<JSON[]> {
+        return this.getFilesAsJson(path, extension);
     };
 
     /**
@@ -118,12 +107,8 @@ export class FileSystemScanner {
      * @public
      * @async
      */
-    public async getElementTemplates(path: string): Promise<JSON []> {
-        if (!path) {
-            return Promise.resolve([]);
-        }
-        const uri = vscode.Uri.joinPath(this.projectUri, path);
-        return this.getFilesAsJson(uri, 'json');
+    public async getElementTemplates(path: string, extension: string): Promise<JSON []> {
+        return this.getFilesAsJson(path, extension);
     }
 
     /**
@@ -132,33 +117,20 @@ export class FileSystemScanner {
      * @private
      * @async
      */
-    private async getFilesAsJson(uri: vscode.Uri, fileExt: string): Promise<JSON[]> {
+    private async getFilesAsJson(path: string, extension: string): Promise<JSON[]> {
+        if (!path) {
+            return Promise.resolve([]);
+        }
+        const uri = vscode.Uri.joinPath(this.projectUri, path);
+
         const fileContent: JSON[] = [];
         try {
-            const files = await this.readFile(uri, fileExt);
+            const files = await this.readFilesOfDir(uri, extension);
             files.forEach((content, path) => {
                 try {
-                    fileContent.push(this.getResultAsJson(content));
+                    fileContent.push(this.getStringAsJson(content));
                 } catch (error) {
-                    const strSplit = path.split("#");
-                    const dir = strSplit[0];
-                    const name = strSplit[1];
-                    vscode.window.showInformationMessage(
-                        'Failed to read json!' +
-                        ' - Folder: ' + dir +
-                        ' - File: ' + name +
-                        ' - ' + error,
-                        ...['Goto file']
-                    ).then(() => {
-                        const uri = vscode.Uri.joinPath(this.projectUri, dir, name);
-                        vscode.window.showTextDocument(
-                            uri,
-                            {
-                                preserveFocus: false,
-                                preview: false,
-                                viewColumn: vscode.ViewColumn.Active
-                            });
-                    });
+                    this.showErrorMessage(path, error);
                 }
             });
 
@@ -174,7 +146,7 @@ export class FileSystemScanner {
      * @returns a json object
      * @private
      */
-    private getResultAsJson(content: string): JSON {
+    private getStringAsJson(content: string): JSON {
         try {
             return JSON.parse(content);
         } catch (error) {
@@ -196,10 +168,11 @@ export class FileSystemScanner {
             const start = 8;
             const end = key.indexOf('","schema":{');
             return key.substring(start, end);
-        } else if(substr2) {
+        } else if (substr2) {
+            // Todo: Is the key always 9 characters long?
             const key = substr2[0];
             const start = key.lastIndexOf(`},"key":"`) + 9;
-            return key.substring(start, key.length-2);
+            return key.substring(start, key.length - 2);
         } else {
             throw new Error('getFormKey() -> ' + 'Form key could not be found!');
         }
@@ -213,7 +186,7 @@ export class FileSystemScanner {
      * @private
      * @async
      */
-    private async readFile(directory: vscode.Uri, fileExtension: string): Promise<Awaited<Map<string, string>>> {
+    private async readFilesOfDir(directory: vscode.Uri, fileExtension: string): Promise<Map<string, string>> {
         const files: Map<string, Thenable<Uint8Array>> = new Map();
         const content: Map<string, string> = new Map();
 
@@ -226,9 +199,8 @@ export class FileSystemScanner {
             const results = await this.fs.readDirectory(directory);
             results.forEach((result) => {
                 if (result[1] === vscode.FileType.File) {   // only files
-                    const regExp = /(?:\.([^.]+))?$/;
-                    const extension = regExp.exec(result[0]);
-                    if (extension && extension[1] === fileExtension) {  // only files with given file extension
+                    const extension = result[0].substring(result[0].indexOf('.') + 1);
+                    if (extension && extension === fileExtension) {  // only files with given file extension
                         const fileUri = vscode.Uri.joinPath(directory, result[0]);
                         try {
                             files.set(dirRoot + '/#' + result[0], this.fs.readFile(fileUri));
@@ -246,8 +218,8 @@ export class FileSystemScanner {
             });
 
             const filePaths = Array.from(files.keys());
-            const testSettled = await Promise.allSettled(files.values());
-            testSettled.forEach((result, index) => {
+            const settled = await Promise.allSettled(files.values());
+            settled.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
                     content.set(
                         filePaths[index],
@@ -261,5 +233,27 @@ export class FileSystemScanner {
         } catch (error) {
             return Promise.reject(new Error('readFile() -> ' + error));
         }
+    }
+
+    private showErrorMessage(path: string, error: unknown) {
+        const strSplit = path.split("#");
+        const dir = strSplit[0];
+        const name = strSplit[1];
+        vscode.window.showInformationMessage(
+            'Failed to read form key!' +
+            ' - Folder: ' + dir +
+            ' - File: ' + name +
+            ' - ' + error,
+            ...['Goto file']
+        ).then(() => {
+            const uri = vscode.Uri.joinPath(this.projectUri, dir, name);
+            vscode.window.showTextDocument(
+                uri,
+                {
+                    preserveFocus: false,
+                    preview: false,
+                    viewColumn: vscode.ViewColumn.Active
+                });
+        });
     }
 }

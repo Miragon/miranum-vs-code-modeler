@@ -14,15 +14,18 @@ type VscState = {
     files: string;
 };
 
-export interface Workspace {
-    configs: string;
-    elementTemplates: string;
-    forms: string;
-}
-
 export interface FilesContent {
-    configs: JSON[] | string[],
-    elementTemplates: JSON[] | string[],
-    forms: JSON[] | string[]
+    type: string,
+    content: JSON[] | string[]
 }
 
+export interface WorkspaceFolder {
+    type: string;
+    path: string;
+    extension: string;
+}
+
+export interface WorkspaceContent {
+    workspace: WorkspaceFolder[];
+    content: FilesContent[];
+}

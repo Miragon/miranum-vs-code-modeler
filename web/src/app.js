@@ -52,9 +52,22 @@ if (ENV === 'vscode') {
         if (state.files !== 'undefined') {
             files = JSON.parse(state.files);
             // here get the files
-            configs = files.configs;
-            templates = files.elementTemplates;
-            window.forms = files.forms; //forms needs to be on window layer, so we can work with it in FormSimpProps
+            files.forEach((file) => {
+                switch (file.type) {
+                    case 'config': {
+                        configs = file.content;
+                        break;
+                    }
+                    case 'element-template': {
+                        templates = file.content;
+                        break;
+                    }
+                    case 'form': {
+                        window.forms = file.content; //forms needs to be on window layer, so we can work with it in FormSimpProps
+                        break;
+                    }
+                }
+            });
         } else {
             files = 'undefined';
             configs = [];
