@@ -5,18 +5,19 @@ import {Uri} from "vscode";
 /**
  * Scan the current working directory for important files.
  */
-export class FileSystemScanner {
-    private static instance: FileSystemScanner;
+export class FileSystemReader {
+    private static instance: FileSystemReader;
     private readonly fs = vscode.workspace.fs;
 
     private constructor(
         private readonly projectUri: vscode.Uri,
+        private readonly workspaceFolders: WorkspaceFolder[]
     ) {
     }
 
-    public static createFileSystemScanner(uri: Uri): FileSystemScanner {
+    public static getFileSystemReader(uri: Uri, workspaceFolder: WorkspaceFolder[]): FileSystemReader {
         if (this.instance === undefined) {
-            this.instance = new FileSystemScanner(uri);
+            this.instance = new FileSystemReader(uri, workspaceFolder);
         }
         return this.instance;
     }
@@ -24,9 +25,9 @@ export class FileSystemScanner {
     /**
      * Get all available files.
      */
-    public async getAllFiles(workspace: WorkspaceFolder[]): Promise<FilesContent[]> {
+    public async getAllFiles(): Promise<FilesContent[]> {
         const promises: Map<string, Promise<JSON[] | string[]>> = new Map();
-        workspace.forEach((folder) => {
+        this.workspaceFolders.forEach((folder) => {
             let ext = folder.extension.substring(folder.extension.indexOf('.') + 1);  // substring after first '.'
             switch (folder.type) {
                 case 'form': {
@@ -112,12 +113,29 @@ export class FileSystemScanner {
     }
 
     /**
+     * Get the content of a single file as JSON
+     * @param uri
+     */
+    public async getFileAsJson(uri: Uri): Promise<JSON> {
+        const file = await this.readFile(uri);
+        try {
+            return Promise.resolve(this.getStringAsJson(file));
+        } catch (error) {
+            const uriAsString = uri.toString();
+            const filename = uriAsString.replace(/^.*[\\\/]/, '');
+            const path = uriAsString.substring(0, uriAsString.indexOf(filename));
+            this.showErrorMessage(path, error);
+            return Promise.resolve(JSON.parse('{}'));
+        }
+    }
+
+    /**
      * Get content of json files
      * @returns a promise with an array of json objects or an empty array
      * @private
      * @async
      */
-    private async getFilesAsJson(path: string, extension: string): Promise<JSON[]> {
+    public async getFilesAsJson(path: string, extension: string): Promise<JSON[]> {
         if (!path) {
             return Promise.resolve([]);
         }
@@ -176,6 +194,11 @@ export class FileSystemScanner {
         } else {
             throw new Error('getFormKey() -> ' + 'Form key could not be found!');
         }
+    }
+
+    private async readFile(uri: Uri): Promise<string> {
+        const file = await this.fs.readFile(uri);
+        return Promise.resolve(Buffer.from(file).toString('utf-8'));  // convert Uint8Array to string
     }
 
     /**

@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import {FilesContent, WorkspaceFolder} from "./types";
-import {FileSystemScanner} from "./lib/FileSystemScanner";
-import {TextEditor} from "./lib/TextEditor";
-import {Watcher} from "./lib/FileSystemWatcher";
+import {FileSystemReader, Watcher, TextEditor} from "./lib";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -36,42 +34,34 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         token: vscode.CancellationToken
     ): Promise<void> {
 
+        // Disable preview mode
+        await vscode.commands.executeCommand('workbench.action.keepEditor');
+
         let isUpdateFromWebview = false;
         let isUpdateFromExtension = false;
         let isBuffer = false;
 
-        // Disable preview mode
-        await vscode.commands.executeCommand('workbench.action.keepEditor');
+        let workspaceFolder: WorkspaceFolder[];
+        try {
+            workspaceFolder = await getWorkspace();
+        } catch (error) {
+            workspaceFolder = this.getDefaultWorkspace();
+            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
+        }
 
         webviewPanel.webview.options = {enableScripts: true};
         TextEditor.document = document;
 
         const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
-        const fileSystemScanner = FileSystemScanner.createFileSystemScanner(projectUri);
-        try {
-            Watcher.createWatcher(projectUri, await getWorkspace());
-            webviewPanel.webview.html = this.getHtmlForWebview(
-                webviewPanel.webview,
-                this.context.extensionUri,
-                document.getText(),
-                await fileSystemScanner.getAllFiles(await getWorkspace())
-            );
-
-        } catch (error) {
-            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
-
-            // If no workspace configuration is specified, we still want to allow the user to use element templates.
-            // Therefore, the user can create the default "element-templates" folder and place his templates there.
-            webviewPanel.webview.html = this.getHtmlForWebview(
-                webviewPanel.webview,
-                this.context.extensionUri,
-                document.getText(),
-                [{
-                    type: 'element-template',
-                    content: await fileSystemScanner.getElementTemplates('element-templates', 'json'),
-                }]
-            );
-        }
+        const reader = FileSystemReader.getFileSystemReader(projectUri, workspaceFolder);
+        const watcher = Watcher.getWatcher(projectUri, workspaceFolder);
+        watcher.subscribe(document.uri.toString(), webviewPanel.webview);
+        webviewPanel.webview.html = this.getHtmlForWebview(
+            webviewPanel.webview,
+            this.context.extensionUri,
+            document.getText(),
+            await reader.getAllFiles()
+        );
 
         async function getWorkspace() {
             try {
@@ -143,16 +133,18 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             }
         });
 
-        webviewPanel.onDidChangeViewState(() => {
+        webviewPanel.onDidChangeViewState((wp) => {
             switch (true) {
-                case webviewPanel.active: {
+                case wp.webviewPanel.active: {
                     TextEditor.document = document;
                     /* falls through */
                 }
-                case webviewPanel.visible: {
+                case wp.webviewPanel.visible: {
                     if (isBuffer) {
                         updateWebview(BpmnModeler.viewType + '.updateFromExtension');
                         isBuffer = false;
+                    } else if (!watcher.getResponse(document.uri.toString())) {
+                        watcher.update(document.uri.toString(), wp.webviewPanel.webview);
                     }
                     break;
                 }
@@ -160,6 +152,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
 
         webviewPanel.onDidDispose(() => {
+            watcher.unsubscribe(document.uri.toString());
             changeDocumentSubscription.dispose();
         });
     }
@@ -263,5 +256,13 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     private getProjectUri(path: string): string {
         const filename = path.replace(/^.*[\\\/]/, '');
         return path.substring(0, path.indexOf(filename));
+    }
+
+    private getDefaultWorkspace(): WorkspaceFolder[] {
+        return [{
+            type: 'element-template',
+            path: "element-templates",
+            extension: ".json"
+        }];
     }
 }

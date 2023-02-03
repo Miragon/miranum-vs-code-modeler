@@ -6,7 +6,7 @@ export type VsCode = {
 
 type VscMessage = {
     type: string;
-    content: string;
+    content: any;
 };
 
 type VscState = {
@@ -23,9 +23,4 @@ export interface WorkspaceFolder {
     type: string;
     path: string;
     extension: string;
-}
-
-export interface WorkspaceContent {
-    workspace: WorkspaceFolder[];
-    content: FilesContent[];
 }
