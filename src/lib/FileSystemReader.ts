@@ -9,15 +9,9 @@ export class FileSystemReader {
     private static instance: FileSystemReader;
     private readonly fs = vscode.workspace.fs;
 
-    private constructor(
-        private readonly projectUri: vscode.Uri,
-        private readonly workspaceFolders: WorkspaceFolder[]
-    ) {
-    }
-
-    public static getFileSystemReader(uri: Uri, workspaceFolder: WorkspaceFolder[]): FileSystemReader {
+    public static getFileSystemReader(): FileSystemReader {
         if (this.instance === undefined) {
-            this.instance = new FileSystemReader(uri, workspaceFolder);
+            this.instance = new FileSystemReader();
         }
         return this.instance;
     }
@@ -25,9 +19,9 @@ export class FileSystemReader {
     /**
      * Get all available files.
      */
-    public async getAllFiles(): Promise<FilesContent[]> {
+    public async getAllFiles(rootDir: Uri, workspaceFolders: WorkspaceFolder[]): Promise<FilesContent[]> {
         const promises: Map<string, Promise<JSON[] | string[]>> = new Map();
-        this.workspaceFolders.forEach((folder) => {
+        workspaceFolders.forEach((folder) => {
             let ext = folder.extension.substring(folder.extension.indexOf('.') + 1);  // substring after first '.'
             switch (folder.type) {
                 case 'form': {
@@ -35,14 +29,14 @@ export class FileSystemReader {
                     if (!ext) {
                         ext = 'form';
                     }
-                    promises.set(folder.type, this.getForms(folder.path, ext));
+                    promises.set(folder.type, this.getForms(rootDir, folder.path, ext));
                     break;
                 }
                 default: {
                     if (!ext) {
                         ext = 'json';
                     }
-                    promises.set(folder.type, this.getFilesAsJson(folder.path, ext));
+                    promises.set(folder.type, this.getFilesAsJson(rootDir, folder.path, ext));
                     break;
                 }
             }
@@ -69,20 +63,19 @@ export class FileSystemReader {
      * @public
      * @async
      */
-    public async getForms(path: string, extension: string): Promise<string[]> {
-        if (!path) {
+    public async getForms(rootDir: Uri, directory: string, extension: string): Promise<string[]> {
+        if (!directory) {
             return Promise.resolve([]);
         }
 
-        const uri = vscode.Uri.joinPath(this.projectUri, path);
         const fileContent: string[] = [];
         try {
-            const files = await this.readFilesOfDir(uri, extension);
+            const files = await this.readDirectory(rootDir, directory, extension);
             files.forEach((content, path) => {
                 try {
                     fileContent.push(this.getFormKey(content));
                 } catch (error) {
-                    this.showErrorMessage(path, error);
+                    this.showErrorMessage(rootDir, path, error);
                 }
             });
 
@@ -98,8 +91,8 @@ export class FileSystemReader {
      * @public
      * @async
      */
-    public async getConfigs(path: string, extension: string): Promise<JSON[]> {
-        return this.getFilesAsJson(path, extension);
+    public async getConfigs(rootDir: Uri, directory: string, extension: string): Promise<JSON[]> {
+        return this.getFilesAsJson(rootDir, directory, extension);
     };
 
     /**
@@ -108,26 +101,29 @@ export class FileSystemReader {
      * @public
      * @async
      */
-    public async getElementTemplates(path: string, extension: string): Promise<JSON []> {
-        return this.getFilesAsJson(path, extension);
+    public async getElementTemplates(rootDir: Uri, directory: string, extension: string): Promise<JSON []> {
+        return this.getFilesAsJson(rootDir, directory, extension);
     }
 
     /**
      * Get the content of a single file as JSON
      * @param uri
      */
-    public async getFileAsJson(uri: Uri): Promise<JSON> {
-        const file = await this.readFile(uri);
-        try {
-            return Promise.resolve(this.getStringAsJson(file));
-        } catch (error) {
-            const uriAsString = uri.toString();
-            const filename = uriAsString.replace(/^.*[\\\/]/, '');
-            const path = uriAsString.substring(0, uriAsString.indexOf(filename));
-            this.showErrorMessage(path, error);
-            return Promise.resolve(JSON.parse('{}'));
-        }
-    }
+    //public async getFileAsJson(uri: Uri): Promise<JSON> {
+    //    const file = await this.readFile(uri);
+    //    try {
+    //        return Promise.resolve(this.getStringAsJson(file));
+    //    } catch (error) {
+    //        const uriAsString = uri.toString();
+    //        const filename = uriAsString.replace(/^.*[\\\/]/, '');
+    //        const path = uriAsString.substring(0, uriAsString.indexOf(filename));
+
+    // Todo: extract the directory from path
+
+    //        this.showErrorMessage(path, error);
+    //        return Promise.resolve(JSON.parse('{}'));
+    //    }
+    //}
 
     /**
      * Get content of json files
@@ -135,20 +131,19 @@ export class FileSystemReader {
      * @private
      * @async
      */
-    public async getFilesAsJson(path: string, extension: string): Promise<JSON[]> {
-        if (!path) {
+    public async getFilesAsJson(rootDir: Uri, directory: string, extension: string): Promise<JSON[]> {
+        if (!directory) {
             return Promise.resolve([]);
         }
-        const uri = vscode.Uri.joinPath(this.projectUri, path);
 
         const fileContent: JSON[] = [];
         try {
-            const files = await this.readFilesOfDir(uri, extension);
+            const files = await this.readDirectory(rootDir, directory, extension);
             files.forEach((content, path) => {
                 try {
                     fileContent.push(this.getStringAsJson(content));
                 } catch (error) {
-                    this.showErrorMessage(path, error);
+                    this.showErrorMessage(rootDir, path, error);
                 }
             });
 
@@ -203,35 +198,33 @@ export class FileSystemReader {
 
     /**
      * Read files and returns their content
+     * @param rootDir
      * @param directory Path to the desired files
      * @param fileExtension File extension of the desired files
      * @returns Promise that resolve to the string value of the read files
      * @private
      * @async
      */
-    private async readFilesOfDir(directory: vscode.Uri, fileExtension: string): Promise<Map<string, string>> {
+    private async readDirectory(rootDir: Uri, directory: string, fileExtension: string): Promise<Map<string, string>> {
         const files: Map<string, Thenable<Uint8Array>> = new Map();
         const content: Map<string, string> = new Map();
 
-        const dirRoot = directory.toString().replace(
-            this.projectUri.toString(),
-            ''
-        );
+        const uri = vscode.Uri.joinPath(rootDir, directory);
 
         try {
-            const results = await this.fs.readDirectory(directory);
+            const results = await this.fs.readDirectory(uri);
             results.forEach((result) => {
                 if (result[1] === vscode.FileType.File) {   // only files
                     const extension = result[0].substring(result[0].indexOf('.') + 1);
                     if (extension && extension === fileExtension) {  // only files with given file extension
-                        const fileUri = vscode.Uri.joinPath(directory, result[0]);
+                        const fileUri = vscode.Uri.joinPath(uri, result[0]);
                         try {
-                            files.set(dirRoot + '/#' + result[0], this.fs.readFile(fileUri));
+                            files.set(directory + '/#' + result[0], this.fs.readFile(fileUri));
                         } catch (error) {
                             // inform user that a certain file could not be read
                             vscode.window.showInformationMessage(
                                 'Could not read file!' +
-                                ' - Folder: ' + dirRoot +
+                                ' - Folder: ' + directory +
                                 ' - File: ' + result[0] +
                                 ' - ' + error
                             );
@@ -258,7 +251,7 @@ export class FileSystemReader {
         }
     }
 
-    private showErrorMessage(path: string, error: unknown) {
+    private showErrorMessage(rootDir: Uri, path: string, error: unknown) {
         const strSplit = path.split("#");
         const dir = strSplit[0];
         const name = strSplit[1];
@@ -269,7 +262,7 @@ export class FileSystemReader {
             ' - ' + error,
             ...['Goto file']
         ).then(() => {
-            const uri = vscode.Uri.joinPath(this.projectUri, dir, name);
+            const uri = vscode.Uri.joinPath(rootDir, dir, name);
             vscode.window.showTextDocument(
                 uri,
                 {

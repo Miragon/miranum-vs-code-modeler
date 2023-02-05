@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
   <bpmn2:process id="Process_1" isExecutable="false">
-    <bpmn2:startEvent id="StartEvent_1" name="Start process" camunda:formKey="StartForm">
+    <bpmn2:startEvent id="StartEvent_1" name="Start process" camunda:formKey="Start_Form">
       <bpmn2:outgoing>Flow_1z0n64z</bpmn2:outgoing>
     </bpmn2:startEvent>
     <bpmn2:sequenceFlow id="Flow_1z0n64z" sourceRef="StartEvent_1" targetRef="Activity_1xqgva6" />
@@ -49,7 +49,7 @@
       <bpmndi:BPMNShape id="Activity_0pj0du8_di" bpmnElement="Activity_01wpq7c">
         <dc:Bounds x="390" y="140" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0vyzn06_di" bpmnElement="Activity_1xqgva6">
+      <bpmndi:BPMNShape id="Activity_104o1ap_di" bpmnElement="Activity_1xqgva6">
         <dc:Bounds x="240" y="140" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1z0n64z_di" bpmnElement="Flow_1z0n64z">

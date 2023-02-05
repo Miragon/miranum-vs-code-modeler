@@ -39,8 +39,9 @@ const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let files;
-let configs;
-let templates;
+let configs = [];
+let templates = [];
+window.forms = [];
 
 // for env === browser
 let textarea;
@@ -68,11 +69,6 @@ if (ENV === 'vscode') {
                     }
                 }
             });
-        } else {
-            files = 'undefined';
-            configs = [];
-            templates = [];
-            window.forms = [];
         }
     }
 

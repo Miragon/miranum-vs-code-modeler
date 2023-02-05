@@ -11,7 +11,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
-    public constructor(
+    private constructor(
         private readonly context: vscode.ExtensionContext
     ) {
         // Register the command for toggling the standard vscode text editor.
@@ -41,6 +41,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         let isUpdateFromExtension = false;
         let isBuffer = false;
 
+        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
         let workspaceFolder: WorkspaceFolder[];
         try {
             workspaceFolder = await getWorkspace();
@@ -52,15 +53,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.options = {enableScripts: true};
         TextEditor.document = document;
 
-        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
-        const reader = FileSystemReader.getFileSystemReader(projectUri, workspaceFolder);
+        const reader = FileSystemReader.getFileSystemReader();
         const watcher = Watcher.getWatcher(projectUri, workspaceFolder);
         watcher.subscribe(document.uri.toString(), webviewPanel.webview);
         webviewPanel.webview.html = this.getHtmlForWebview(
             webviewPanel.webview,
             this.context.extensionUri,
             document.getText(),
-            await reader.getAllFiles()
+            await reader.getAllFiles(projectUri, workspaceFolder)
         );
 
         async function getWorkspace() {
@@ -69,7 +69,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 const workspace: WorkspaceFolder[] = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
                 return workspace;
             } catch (error) {
-                throw new Error('getWorkspace() -> ' + error);
+                throw new Error('[BpmnModeler] getWorkspace() -> ' + error);
             }
         }
 
