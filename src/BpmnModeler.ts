@@ -41,7 +41,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         let isUpdateFromExtension = false;
         let isBuffer = false;
 
-        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
+        const projectUri = this.getProjectUri(document.uri);
+
         let workspaceFolder: WorkspaceFolder[];
         try {
             workspaceFolder = await getWorkspace();
@@ -55,7 +56,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const reader = FileSystemReader.getFileSystemReader();
         const watcher = Watcher.getWatcher(projectUri, workspaceFolder);
-        watcher.subscribe(document.uri.toString(), webviewPanel.webview);
+        watcher.subscribe(document.uri.toString(), webviewPanel);
         webviewPanel.webview.html = this.getHtmlForWebview(
             webviewPanel.webview,
             this.context.extensionUri,
@@ -143,9 +144,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                     if (isBuffer) {
                         updateWebview(BpmnModeler.viewType + '.updateFromExtension');
                         isBuffer = false;
-                    } else if (!watcher.getResponse(document.uri.toString())) {
-                        watcher.update(document.uri.toString(), wp.webviewPanel.webview);
                     }
+                    watcher.update(document.uri.toString(), wp.webviewPanel);
                     break;
                 }
             }
@@ -231,7 +231,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         `;
     }
 
-    //     -----------------------------HELPERS-----------------------------     \\
     private getNonce(): string {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -253,9 +252,26 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.workspace.applyEdit(edit);
     }
 
-    private getProjectUri(path: string): string {
-        const filename = path.replace(/^.*[\\\/]/, '');
-        return path.substring(0, path.indexOf(filename));
+    /**
+     * Gets the URI of the currently opened project.
+     * If a workspace exists, the URI of the workspace is returned, otherwise the URI of the open document without the filename.
+     * @param document The URI of the open document
+     * @private
+     */
+    private getProjectUri(document: vscode.Uri): vscode.Uri {
+        const workspaces = vscode.workspace.workspaceFolders;
+        let documentParts = document.path.split('/');
+        documentParts = documentParts.slice(0, documentParts.length-1);
+        if (workspaces) {
+            for (const ws of workspaces) {
+                const wsParts = ws.uri.path.split('/');
+                const documentPath = documentParts.slice(0, wsParts.length).join('/');
+                if (ws.uri.path === documentPath) {
+                    return ws.uri;
+                }
+            }
+        }
+        return vscode.Uri.parse(documentParts.join('/'));
     }
 
     private getDefaultWorkspace(): WorkspaceFolder[] {
