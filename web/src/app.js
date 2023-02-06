@@ -6,6 +6,7 @@ import {
     CamundaPlatformPropertiesProviderModule,
     ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
+import {FilesContent} from "../../src/types";
 
 // Property Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
@@ -52,23 +53,7 @@ if (ENV === 'vscode') {
     if (state) {
         if (state.files !== 'undefined') {
             files = JSON.parse(state.files);
-            // here get the files
-            files.forEach((file) => {
-                switch (file.type) {
-                    case 'config': {
-                        configs = file.content;
-                        break;
-                    }
-                    case 'element-template': {
-                        templates = file.content;
-                        break;
-                    }
-                    case 'form': {
-                        window.forms = file.content; //forms needs to be on window layer, so we can work with it in FormSimpProps
-                        break;
-                    }
-                }
-            });
+            setFilesContent(files);
         }
     }
 
@@ -170,6 +155,28 @@ async function exportDiagram() {
     return (await modeler.saveXML({format: true}));
 }
 
+/**
+ * @param {FilesContent[]} files
+ */
+function setFilesContent(files) {
+    files.forEach((file) => {
+        switch (file.type) {
+            case 'config': {
+                configs = file.content;
+                break;
+            }
+            case 'element-template': {
+                templates = file.content;
+                break;
+            }
+            case 'form': {
+                window.forms = file.content; //forms needs to be on window layer, so we can work with it in FormSimpProps
+                break;
+            }
+        }
+    });
+}
+
 // main
 $(function () {
     if (ENV === 'vscode') {
@@ -187,6 +194,11 @@ $(function () {
                     const xml = message.text;
                     importDiagram(xml);
                     return;
+                }
+                case 'FileSystemWatcher.reloadFiles': {
+                    setFilesContent(message.text);
+                    var loader = modeler.get('elementTemplatesLoader');
+                    loader.setTemplates(templates);
                 }
             }
         });

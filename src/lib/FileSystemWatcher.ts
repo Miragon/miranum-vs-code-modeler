@@ -12,18 +12,7 @@ export class Watcher {
         private readonly projectUri: Uri,
         private readonly workspaceFolders: WorkspaceFolder[],
     ) {
-        //const reader = FileSystemReader.getFileSystemReader();
         const watcher = workspace.createFileSystemWatcher(this.createGlobPattern());
-
-        //const notify = async (uri: string) => {
-        //    const dir = this.getDirectory(uri.toString());
-        //    try {
-        //        this.changes.add(dir);
-        //        this.notify(await reader.getFilesAsJson(this.projectUri, dir, this.getExtension(dir)));
-        //    } catch (error) {
-        //        console.error(error);
-        //    }
-        //};
 
         watcher.onDidCreate((uri) => {
             this.notify(uri);
@@ -39,16 +28,11 @@ export class Watcher {
     }
 
     public static getWatcher(projectUri: Uri, workspace: WorkspaceFolder[]): Watcher {
-        const root = projectUri.toString();
+        const root = projectUri.path;
         if (this.instances[root] === undefined) {
             this.instances[root] = new Watcher(projectUri, workspace);
         }
         return this.instances[root];
-
-        //if (this.instance === undefined) {
-        //    this.instance = new Watcher(projectUri, workspace);
-        //}
-        //return this.instance;
     }
 
     public subscribe(id: string, webviewPanel: WebviewPanel): void {
@@ -68,24 +52,35 @@ export class Watcher {
         }
 
         const reader = FileSystemReader.getFileSystemReader();
-        // todo: use reader.getAllFiles
-        //  list all workspceFolders which are in this.changes
+        const changedWorkspaceFolders: WorkspaceFolder[] = [];
         for (const dir of this.changes) {
-            try {
-                webviewPanel.webview.postMessage({
-                    type: 'FileSystemWatcher.reloadFiles',
-                    text: await reader.getFilesAsJson(this.projectUri, dir, this.getExtension(dir))
-                });
-                delete this.unresponsive[id];
-                if (webviewPanel.visible) {
-                    // Todo: Show message to user
+            for (const workspaceFolder of this.workspaceFolders) {
+                if (dir === workspaceFolder.path) {
+                    changedWorkspaceFolders.push(workspaceFolder);
                 }
-            } catch (error) {
-                this.unresponsive[id] = webviewPanel.webview;
-                if (webviewPanel.visible) {
-                    // Todo: Show message to user
-                }
-                console.log('[FileSystemWatcher]' + error);
+            }
+        }
+
+        try {
+            webviewPanel.webview.postMessage({
+                type: 'FileSystemWatcher.reloadFiles',
+                text: await reader.getAllFiles(this.projectUri, changedWorkspaceFolders)
+            });
+            delete this.unresponsive[id];
+            if (webviewPanel.visible) {
+                // Todo: Show message to user
+            }
+
+        } catch (error) {
+            this.unresponsive[id] = webviewPanel.webview;
+            if (webviewPanel.visible) {
+                // Todo: Show message to user
+            }
+            console.log('[FileSystemWatcher]' + error);
+
+        } finally {
+            if (Object.keys(this.unresponsive).length === 0) {
+                this.changes = new Set();
             }
         }
     }
@@ -94,9 +89,14 @@ export class Watcher {
         const reader = FileSystemReader.getFileSystemReader();
 
         try {
-            const [dir, ext] = this.getDirectoryAndExtension(uri.toString());
-            this.changes.add(dir);
-            const files = await reader.getFilesAsJson(this.projectUri, dir, ext);
+            const [dir, ext] = this.getDirectoryAndExtension(uri);
+            const changedWorkspaceFolders: WorkspaceFolder[] = [];
+            for (const workspaceFolder of this.workspaceFolders) {
+                if (dir === workspaceFolder.path) {
+                    changedWorkspaceFolders.push(workspaceFolder);
+                }
+            }
+            const files = await reader.getAllFiles(this.projectUri, changedWorkspaceFolders);
             for (const [id, webviewPanel] of this.webviews) {
                 try {
                     webviewPanel.webview.postMessage({
@@ -107,80 +107,85 @@ export class Watcher {
                     if (webviewPanel.visible) {
                         // Todo: Show message to user
                     }
+
                 } catch (error) {
                     this.unresponsive[id] = webviewPanel.webview;
                     if (webviewPanel.visible) {
                         // Todo: Show message to user
                     }
                     console.log('[FileSystemWatcher]' + error);
+
+                } finally {
+                    if (Object.keys(this.unresponsive).length > 0) {
+                        this.changes.add(dir);
+                    } else {
+                        this.changes.delete(dir);
+                    }
                 }
             }
 
         } catch (error) {
+            for (const [id, webviewPanel] of this.webviews) {
+                this.unresponsive[id] = webviewPanel.webview;
+            }
             console.log('[FileSystemWatcher]' + error);
         }
-
-
-        //const files = await reader.getFilesAsJson(this.projectUri, dir, this.getExtension(dir));
-
-        //this.changes.add(dir);
-        //this.webviews.forEach((webview, key) => {
-        //    try {
-        //        webview.postMessage({
-        //            type: 'FileSystemWatcher.reloadFiles',
-        //            text: files
-        //        });
-        //        this.response[key] = true;
-        //        // Todo: Show message to user
-        //    } catch (error) {
-        //        console.log('[FileSystemWatcher]' + error);
-        //        // Todo: Show message to user
-        //        this.response[key] = false;
-        //    }
-        //});
     }
 
     private createGlobPattern(): RelativePattern {
+        let projectPath = this.projectUri.path.split('/');
         let folders = '';
         let ext = '';
         const extSet = new Set();  // prevent duplicates
 
-        this.workspaceFolders.forEach((item, index) => {
-            folders += item.path;
-            extSet.add(item.extension.substring(item.extension.indexOf('.')+1));
-            if (this.workspaceFolders.length-1 !== index) { folders += ','; }
-        });
-
-        let index = 0;
-        for (const value of extSet) {
-            ext += value;
-            if (extSet.size-1 !== index) { ext += ','; }
-            index++;
+        for (const [i, folder] of this.workspaceFolders.entries()) {
+            // todo:
+            //  make it windows compatible
+            //  remove trailing slashes or backslashes
+            const path = folder.path.split('/');
+            for (const part of path) {
+                if (part === '..') {
+                    projectPath = projectPath.slice(0, projectPath.length-1);
+                }
+            }
+            extSet.add(folder.extension.substring(folder.extension.indexOf('.')+1));
+            if (this.workspaceFolders.length-1 !== i) {
+                folders += path[path.length-1] + ',';
+            } else {
+                folders += path[path.length-1];
+            }
         }
 
+        let i = 0;
+        for (const value of extSet) {
+            if (extSet.size-1 !== i) {
+                ext += value + ',';
+            } else {
+                ext += value;
+            }
+            i++;
+        }
+
+        const base = Uri.parse(projectPath.join('/'));
         const pattern = '**/{' + folders + '}/*.{' + ext + '}';
 
-        return new RelativePattern(this.projectUri, pattern);
+        return new RelativePattern(base, pattern);
     }
 
-    private getDirectoryAndExtension(uri: string): [dir: string, ext: string] {
-        // Todo: Extract the directory from given URI
-        const path = uri.replace(this.projectUri.toString(), '');
+    /**
+     * Extract the relative path to the file and its extension.
+     * @param uri The URI of the file
+     * @private
+     */
+    private getDirectoryAndExtension(uri: Uri): [dir: string, ext: string] {
+        const path = uri.path;  // e.g. '/Users/peterheinemann/Projects/miranum/miranum-vs-code-modeler/examples/forms/control.form'
         const dirs = path.split('/');
         for (const folder of this.workspaceFolders) {
-            if (folder.path === dirs[0]) {
+            const wsPath = folder.path.split('/');  //  todo: make it windows compatible
+            if (wsPath[wsPath.length-1] === dirs[dirs.length-2]) {
                 return [folder.path, folder.extension];
             }
         }
         throw new Error('[FileSystemWatcher] -> Could not find ' + dirs[0] + 'in the tracked directories!');
     }
-
-    //private getExtension(dir: string): string {
-    //    for (const folder of this.workspaceFolders) {
-    //        if (folder.path === dir) {
-    //            return folder.extension;
-    //        }
-    //    }
-    //    throw new Error('[FileSystemWatcher] -> Could not find ' + dir + 'in the tracked directories!');
-    //}
 }
