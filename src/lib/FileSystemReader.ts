@@ -209,6 +209,7 @@ export class FileSystemReader {
         const files: Map<string, Thenable<Uint8Array>> = new Map();
         const content: Map<string, string> = new Map();
 
+        const ext = fileExtension.split('.');
         const uri = vscode.Uri.joinPath(rootDir, directory);
 
         try {
@@ -216,7 +217,7 @@ export class FileSystemReader {
             results.forEach((result) => {
                 if (result[1] === vscode.FileType.File) {   // only files
                     const extension = result[0].substring(result[0].indexOf('.') + 1);
-                    if (extension && extension === fileExtension) {  // only files with given file extension
+                    if (extension && extension === ext[ext.length-1]) {  // only files with given file extension
                         const fileUri = vscode.Uri.joinPath(uri, result[0]);
                         try {
                             files.set(directory + '/#' + result[0], this.fs.readFile(fileUri));
