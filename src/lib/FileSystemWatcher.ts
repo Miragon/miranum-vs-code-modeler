@@ -1,4 +1,4 @@
-import {RelativePattern, Uri, Webview, WebviewPanel, workspace} from "vscode";
+import {RelativePattern, Uri, Webview, WebviewPanel, window, workspace} from "vscode";
 import {WorkspaceFolder} from "../types";
 import {FileSystemReader} from "./FileSystemReader";
 
@@ -27,6 +27,11 @@ export class Watcher {
         });
     }
 
+    /**
+     * Create a unique instance for each workspace or return the instance if it already exists.
+     * @param projectUri The URI of the project/workspace
+     * @param workspace List of folders to be monitored within a specific project
+     */
     public static getWatcher(projectUri: Uri, workspace: WorkspaceFolder[]): Watcher {
         const root = projectUri.path;
         if (this.instances[root] === undefined) {
@@ -35,16 +40,29 @@ export class Watcher {
         return this.instances[root];
     }
 
+    /**
+     * Subscribe for notification.
+     * @param id A unique identifier for given webview
+     * @param webviewPanel The webview panel that contains the webview
+     */
     public subscribe(id: string, webviewPanel: WebviewPanel): void {
         this.webviews.set(id, webviewPanel);
     }
 
+    /**
+     * Unsubscribe from notification.
+     * @param id A unique identifier for a webview
+     */
     public unsubscribe(id: string): void {
         this.webviews.delete(id);
         delete this.unresponsive[id];
-        // Todo: Delete watcher from this.instances if no webviews exists anymore?
     }
 
+    /**
+     * Update given webview if it was unresponsive when the changes occurred.
+     * @param id A unique identifier for given webview
+     * @param webviewPanel The webview panel that contains the webview
+     */
     public async update(id: string, webviewPanel: WebviewPanel) {
         if (!this.unresponsive[id]) {
             // webview was already updated
@@ -67,15 +85,15 @@ export class Watcher {
         })) {
             delete this.unresponsive[id];
             if (webviewPanel.visible) {
-                // Todo: Show message to user
+                this.showHappyMessage();
             }
 
         } else {
             this.unresponsive[id] = webviewPanel.webview;
             if (webviewPanel.visible) {
-                // Todo: Show message to user
+                this.showSadMessage(id, webviewPanel);
             }
-            console.log('[FileSystemWatcher] -> Could not post message!');
+            console.log('[FileSystemWatcher] -> Could not post message! (ViewState: ' + webviewPanel.visible + ')');
         }
 
         if (Object.keys(this.unresponsive).length === 0) {
@@ -83,6 +101,11 @@ export class Watcher {
         }
     }
 
+    /**
+     * Notify all subscribed webviews and save the unresponsive ones.
+     * @param uri The uri of the changed file
+     * @private
+     */
     private async notify(uri: Uri) {
         const reader = FileSystemReader.getFileSystemReader();
 
@@ -103,15 +126,15 @@ export class Watcher {
                 })) {
                     delete this.unresponsive[id];
                     if (webviewPanel.visible) {
-                        // Todo: Show message to user
+                        this.showHappyMessage();
                     }
 
                 } else {
                     this.unresponsive[id] = webviewPanel.webview;
                     if (webviewPanel.visible) {
-                        // Todo: Show message to user
+                        this.showSadMessage(id, webviewPanel);
                     }
-                    console.log('[FileSystemWatcher] -> Could not post message!');
+                    console.log('[FileSystemWatcher] -> Could not post message! (ViewState: ' + webviewPanel.visible + ')');
                 }
 
                 if (Object.keys(this.unresponsive).length > 0) {
@@ -129,6 +152,12 @@ export class Watcher {
         }
     }
 
+    /**
+     * Create a {@link https://code.visualstudio.com/api/references/vscode-api#RelativePattern|RelativePattern} for the
+     * {@link https://code.visualstudio.com/api/references/vscode-api#FileSystemWatcher|FileSystemWatcher} depending on
+     * the specified {@link WorkspaceFolder}.
+     * @private
+     */
     private createGlobPattern(): RelativePattern {
         let projectPath = this.projectUri.path.split('/');
         let folders = '';
@@ -170,7 +199,7 @@ export class Watcher {
     }
 
     /**
-     * Extract the relative path to the file and its extension.
+     * Extract the folder and extension of given URI.
      * @param uri The URI of the file
      * @private
      */
@@ -184,5 +213,21 @@ export class Watcher {
             }
         }
         throw new Error('[FileSystemWatcher] -> Could not find ' + dirs[0] + 'in the tracked directories!');
+    }
+
+    private showHappyMessage(): void {
+        window.showInformationMessage(
+            'Files reloaded successfully!'
+        );
+    }
+
+    private showSadMessage(id: string, webviewPanel: WebviewPanel): void {
+        window.showInformationMessage(
+            'Failed to reload modeler!' +
+            'Webview: ' + id,
+            ...['Try again']
+        ).then(() => {
+            this.update(id, webviewPanel);
+        });
     }
 }
