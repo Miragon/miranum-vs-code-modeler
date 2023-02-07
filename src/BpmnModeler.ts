@@ -56,7 +56,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
         const reader = FileSystemReader.getFileSystemReader();
         const watcher = Watcher.getWatcher(projectUri, workspaceFolder);
-        watcher.subscribe(document.uri.toString(), webviewPanel);
+        watcher.subscribe(document.uri.path, webviewPanel);
         webviewPanel.webview.html = this.getHtmlForWebview(
             webviewPanel.webview,
             this.context.extensionUri,
@@ -145,14 +145,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                         updateWebview(BpmnModeler.viewType + '.updateFromExtension');
                         isBuffer = false;
                     }
-                    watcher.update(document.uri.toString(), wp.webviewPanel);
+                    watcher.update(document.uri.path, wp.webviewPanel);
                     break;
                 }
             }
         });
 
         webviewPanel.onDidDispose(() => {
-            watcher.unsubscribe(document.uri.toString());
+            watcher.unsubscribe(document.uri.path);
             changeDocumentSubscription.dispose();
         });
     }

@@ -3,9 +3,9 @@ import {WorkspaceFolder} from "../types";
 import {FileSystemReader} from "./FileSystemReader";
 
 export class Watcher {
-    private static instances: {[root: string]: Watcher} = {};
+    private static instances: { [root: string]: Watcher } = {};
     private webviews: Map<string, WebviewPanel> = new Map();
-    private unresponsive: {[id: string]: Webview} = {};
+    private unresponsive: { [id: string]: Webview } = {};
     private changes: Set<string> = new Set();
 
     private constructor(
@@ -61,27 +61,25 @@ export class Watcher {
             }
         }
 
-        try {
-            webviewPanel.webview.postMessage({
-                type: 'FileSystemWatcher.reloadFiles',
-                text: await reader.getAllFiles(this.projectUri, changedWorkspaceFolders)
-            });
+        if (await webviewPanel.webview.postMessage({
+            type: 'FileSystemWatcher.reloadFiles',
+            text: await reader.getAllFiles(this.projectUri, changedWorkspaceFolders)
+        })) {
             delete this.unresponsive[id];
             if (webviewPanel.visible) {
                 // Todo: Show message to user
             }
 
-        } catch (error) {
+        } else {
             this.unresponsive[id] = webviewPanel.webview;
             if (webviewPanel.visible) {
                 // Todo: Show message to user
             }
-            console.log('[FileSystemWatcher]' + error);
+            console.log('[FileSystemWatcher] -> Could not post message!');
+        }
 
-        } finally {
-            if (Object.keys(this.unresponsive).length === 0) {
-                this.changes = new Set();
-            }
+        if (Object.keys(this.unresponsive).length === 0) {
+            this.changes = new Set();
         }
     }
 
@@ -97,30 +95,29 @@ export class Watcher {
                 }
             }
             const files = await reader.getAllFiles(this.projectUri, changedWorkspaceFolders);
+
             for (const [id, webviewPanel] of this.webviews) {
-                try {
-                    webviewPanel.webview.postMessage({
-                        type: 'FileSystemWatcher.reloadFiles',
-                        text: files
-                    });
+                if (await webviewPanel.webview.postMessage({
+                    type: 'FileSystemWatcher.reloadFiles',
+                    text: files
+                })) {
                     delete this.unresponsive[id];
                     if (webviewPanel.visible) {
                         // Todo: Show message to user
                     }
 
-                } catch (error) {
+                } else {
                     this.unresponsive[id] = webviewPanel.webview;
                     if (webviewPanel.visible) {
                         // Todo: Show message to user
                     }
-                    console.log('[FileSystemWatcher]' + error);
+                    console.log('[FileSystemWatcher] -> Could not post message!');
+                }
 
-                } finally {
-                    if (Object.keys(this.unresponsive).length > 0) {
-                        this.changes.add(dir);
-                    } else {
-                        this.changes.delete(dir);
-                    }
+                if (Object.keys(this.unresponsive).length > 0) {
+                    this.changes.add(dir);
+                } else {
+                    this.changes.delete(dir);
                 }
             }
 
@@ -145,20 +142,20 @@ export class Watcher {
             const path = folder.path.split('/');
             for (const part of path) {
                 if (part === '..') {
-                    projectPath = projectPath.slice(0, projectPath.length-1);
+                    projectPath = projectPath.slice(0, projectPath.length - 1);
                 }
             }
-            extSet.add(folder.extension.substring(folder.extension.indexOf('.')+1));
-            if (this.workspaceFolders.length-1 !== i) {
-                folders += path[path.length-1] + ',';
+            extSet.add(folder.extension.substring(folder.extension.indexOf('.') + 1));
+            if (this.workspaceFolders.length - 1 !== i) {
+                folders += path[path.length - 1] + ',';
             } else {
-                folders += path[path.length-1];
+                folders += path[path.length - 1];
             }
         }
 
         let i = 0;
         for (const value of extSet) {
-            if (extSet.size-1 !== i) {
+            if (extSet.size - 1 !== i) {
                 ext += value + ',';
             } else {
                 ext += value;
@@ -182,7 +179,7 @@ export class Watcher {
         const dirs = path.split('/');
         for (const folder of this.workspaceFolders) {
             const wsPath = folder.path.split('/');  //  todo: make it windows compatible
-            if (wsPath[wsPath.length-1] === dirs[dirs.length-2]) {
+            if (wsPath[wsPath.length - 1] === dirs[dirs.length - 2]) {
                 return [folder.path, folder.extension];
             }
         }
