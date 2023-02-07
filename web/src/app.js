@@ -159,6 +159,10 @@ async function exportDiagram() {
  * @param {FilesContent[]} files
  */
 function setFilesContent(files) {
+    vscode.setState({
+        ...vscode.getState(),
+        files: JSON.stringify(files)
+    });
     files.forEach((file) => {
         switch (file.type) {
             case 'config': {
@@ -183,6 +187,7 @@ $(function () {
         const state = vscode.getState();
         if (state) {
             importDiagram(state.text);
+            setFilesContent(JSON.parse(state.files));
         }
 
         window.addEventListener('message', (event) => {
