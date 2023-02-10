@@ -85,13 +85,13 @@ export class Watcher {
         })) {
             delete this.unresponsive[id];
             if (webviewPanel.visible) {
-                this.showHappyMessage();
+                this.showMessage('Files reloaded successfully!');
             }
 
         } else {
             this.unresponsive[id] = webviewPanel.webview;
             if (webviewPanel.visible) {
-                this.showSadMessage(id, webviewPanel);
+                this.showErrorMessage(id, webviewPanel);
             }
             console.log('[FileSystemWatcher] -> Could not post message! (ViewState: ' + webviewPanel.visible + ')');
         }
@@ -126,13 +126,13 @@ export class Watcher {
                 })) {
                     delete this.unresponsive[id];
                     if (webviewPanel.visible) {
-                        this.showHappyMessage();
+                        this.showMessage('Files reloaded successfully!');
                     }
 
                 } else {
                     this.unresponsive[id] = webviewPanel.webview;
                     if (webviewPanel.visible) {
-                        this.showSadMessage(id, webviewPanel);
+                        this.showErrorMessage(id, webviewPanel);
                     }
                     console.log('[FileSystemWatcher] -> Could not post message! (ViewState: ' + webviewPanel.visible + ')');
                 }
@@ -215,13 +215,13 @@ export class Watcher {
         throw new Error('[FileSystemWatcher] -> Could not find ' + dirs[0] + 'in the tracked directories!');
     }
 
-    private showHappyMessage(): void {
+    private showMessage(message: string): void {
         window.showInformationMessage(
-            'Files reloaded successfully!'
+            message
         );
     }
 
-    private showSadMessage(id: string, webviewPanel: WebviewPanel): void {
+    private showErrorMessage(id: string, webviewPanel: WebviewPanel): void {
         window.showInformationMessage(
             'Failed to reload modeler!' +
             'Webview: ' + id,
