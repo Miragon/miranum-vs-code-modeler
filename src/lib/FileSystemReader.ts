@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import {FilesContent, WorkspaceFolder} from "../types";
+import {FolderContent, WorkspaceFolder} from "../types";
 import {Uri} from "vscode";
 
 /**
@@ -19,7 +19,7 @@ export class FileSystemReader {
     /**
      * Get all available files.
      */
-    public async getAllFiles(rootDir: Uri, workspaceFolders: WorkspaceFolder[]): Promise<FilesContent[]> {
+    public async getAllFiles(rootDir: Uri, workspaceFolders: WorkspaceFolder[]): Promise<FolderContent[]> {
         const promises: Map<string, Promise<JSON[] | string[]>> = new Map();
         workspaceFolders.forEach((folder) => {
             switch (folder.type) {
@@ -35,14 +35,14 @@ export class FileSystemReader {
             }
         });
 
-        const filesContent: FilesContent[] = [];
+        const filesContent: FolderContent[] = [];
         const keys: string[] = Array.from(promises.keys());
         const settled = await Promise.allSettled(promises.values());
         settled.forEach((result, index) => {
             if (result.status === 'fulfilled') {
                 filesContent.push({
                     type: keys[index],
-                    content: result.value
+                    files: result.value
                 });
             }
         });
@@ -175,7 +175,7 @@ export class FileSystemReader {
             const end = key.indexOf('","schema":{');
             return key.substring(start, end);
         } else if (substr2) {
-            // Todo: Is the key always 9 characters long?
+            // Todo: This does not work correctly
             const key = substr2[0];
             const start = key.lastIndexOf(`},"key":"`) + 9;
             return key.substring(start, key.length - 2);

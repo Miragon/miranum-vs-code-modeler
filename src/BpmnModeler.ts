@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {FilesContent, WorkspaceFolder} from "./types";
+import {FolderContent, WorkspaceFolder} from "./types";
 import {FileSystemReader, Watcher, TextEditor} from "./lib";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
@@ -157,7 +157,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: FilesContent[]) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: FolderContent[]) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'

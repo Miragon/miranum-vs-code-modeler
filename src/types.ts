@@ -14,9 +14,9 @@ type VscState = {
     files: string;
 };
 
-export interface FilesContent {
+export interface FolderContent {
     type: string,
-    content: JSON[] | string[]
+    files: JSON[] | string[]
 }
 
 export interface WorkspaceFolder {

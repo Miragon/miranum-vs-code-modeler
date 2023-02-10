@@ -6,7 +6,7 @@ import {
     CamundaPlatformPropertiesProviderModule,
     ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
-import {FilesContent} from "../../src/types";
+import {FolderContent} from "../../src/types";
 
 // Property Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
@@ -156,7 +156,7 @@ async function exportDiagram() {
 }
 
 /**
- * @param {FilesContent[]} files
+ * @param {FolderContent[]} files
  */
 function setFilesContent(files) {
     vscode.setState({
@@ -166,15 +166,15 @@ function setFilesContent(files) {
     files.forEach((file) => {
         switch (file.type) {
             case 'config': {
-                configs = file.content;
+                configs = file.files;
                 break;
             }
             case 'element-template': {
-                templates = file.content;
+                templates = file.files;
                 break;
             }
             case 'form': {
-                window.forms = file.content; //forms needs to be on window layer, so we can work with it in FormSimpProps
+                window.forms = file.files; //forms needs to be on window layer, so we can work with it in FormSimpProps
                 break;
             }
         }
