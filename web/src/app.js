@@ -6,6 +6,7 @@ import {
     CamundaPlatformPropertiesProviderModule,
     ElementTemplatesPropertiesProviderModule
 } from "bpmn-js-properties-panel";
+import {FolderContent} from "../../src/types";
 
 // Property Extensions
 import CamundaPlatformBehaviors from 'camunda-bpmn-js-behaviors/lib/camunda-platform';
@@ -39,8 +40,9 @@ const ENV = ENVIROMENTS.VsCode;
 
 const container = $('#js-drop-zone');
 let files;
-let configs;
-let templates;
+let configs = [];
+let templates = [];
+window.forms = [];
 
 // for env === browser
 let textarea;
@@ -51,15 +53,7 @@ if (ENV === 'vscode') {
     if (state) {
         if (state.files !== 'undefined') {
             files = JSON.parse(state.files);
-            // here get the files
-            configs = files.configs;
-            templates = files.elementTemplates;
-            window.forms = files.forms; //forms needs to be on window layer, so we can work with it in FormSimpProps
-        } else {
-            files = 'undefined';
-            configs = [];
-            templates = [];
-            window.forms = [];
+            setFilesContent(files);
         }
     }
 
@@ -161,12 +155,39 @@ async function exportDiagram() {
     return (await modeler.saveXML({format: true}));
 }
 
+/**
+ * @param {FolderContent[]} files
+ */
+function setFilesContent(files) {
+    vscode.setState({
+        ...vscode.getState(),
+        files: JSON.stringify(files)
+    });
+    files.forEach((file) => {
+        switch (file.type) {
+            case 'config': {
+                configs = file.files;
+                break;
+            }
+            case 'element-template': {
+                templates = file.files;
+                break;
+            }
+            case 'form': {
+                window.forms = file.files; //forms needs to be on window layer, so we can work with it in FormSimpProps
+                break;
+            }
+        }
+    });
+}
+
 // main
 $(function () {
     if (ENV === 'vscode') {
         const state = vscode.getState();
         if (state) {
             importDiagram(state.text);
+            setFilesContent(JSON.parse(state.files));
         }
 
         window.addEventListener('message', (event) => {
@@ -178,6 +199,11 @@ $(function () {
                     const xml = message.text;
                     importDiagram(xml);
                     return;
+                }
+                case 'FileSystemWatcher.reloadFiles': {
+                    setFilesContent(message.text);
+                    var loader = modeler.get('elementTemplatesLoader');
+                    loader.setTemplates(templates);
                 }
             }
         });

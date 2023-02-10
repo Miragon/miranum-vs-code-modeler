@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import {Workspace, FilesContent} from "./types";
-import {FileSystemScanner} from "./lib/FileSystemScanner";
-import {TextEditor} from "./lib/TextEditor";
+import {FolderContent, WorkspaceFolder} from "./types";
+import {FileSystemReader, Watcher, TextEditor} from "./lib";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -12,7 +11,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.window.registerCustomEditorProvider(BpmnModeler.viewType, provider);
     }
 
-    public constructor(
+    private constructor(
         private readonly context: vscode.ExtensionContext
     ) {
         // Register the command for toggling the standard vscode text editor.
@@ -33,53 +32,45 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
         token: vscode.CancellationToken
-        ): Promise<void> {
+    ): Promise<void> {
+
+        // Disable preview mode
+        await vscode.commands.executeCommand('workbench.action.keepEditor');
 
         let isUpdateFromWebview = false;
         let isUpdateFromExtension = false;
         let isBuffer = false;
 
-        // Disable preview mode
-        await vscode.commands.executeCommand('workbench.action.keepEditor');
+        const projectUri = this.getProjectUri(document.uri);
 
-        webviewPanel.webview.options = { enableScripts: true };
+        let workspaceFolder: WorkspaceFolder[];
+        try {
+            workspaceFolder = await getWorkspace();
+        } catch (error) {
+            workspaceFolder = this.getDefaultWorkspace();
+            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
+        }
+
+        webviewPanel.webview.options = {enableScripts: true};
         TextEditor.document = document;
 
-        const projectUri = vscode.Uri.parse(this.getProjectUri(document.uri.toString()));
-        try {
-            const fileSystemScanner = new FileSystemScanner(projectUri);
-            webviewPanel.webview.html = this.getHtmlForWebview(
-                webviewPanel.webview,
-                this.context.extensionUri,
-                document.getText(),
-                await fileSystemScanner.getAllFiles(await getWorkspace())
-            );
-
-        } catch (error) {
-            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
-
-            // If no workspace configuration is specified, we still want to allow the user to use element templates.
-            // Therefore, the user can create the default "element-templates" folder and place his templates there.
-            const fileSystemScanner = new FileSystemScanner(projectUri);
-            webviewPanel.webview.html = this.getHtmlForWebview(
-                webviewPanel.webview,
-                this.context.extensionUri,
-                document.getText(),
-                {
-                    configs: [],
-                    elementTemplates: await fileSystemScanner.getElementTemplates('element-templates'),
-                    forms: []
-                }
-            );
-        }
+        const reader = FileSystemReader.getFileSystemReader();
+        const watcher = Watcher.getWatcher(projectUri, workspaceFolder);
+        watcher.subscribe(document.uri.path, webviewPanel);
+        webviewPanel.webview.html = this.getHtmlForWebview(
+            webviewPanel.webview,
+            this.context.extensionUri,
+            document.getText(),
+            await reader.getAllFiles(projectUri, workspaceFolder)
+        );
 
         async function getWorkspace() {
             try {
                 const file = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(projectUri, 'miranum.json'));
-                const workspaceFolder: Workspace = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
-                return workspaceFolder;
-            } catch(error) {
-                throw new Error('getWorkspace() -> ' + error);
+                const workspace: WorkspaceFolder[] = JSON.parse(Buffer.from(file).toString('utf-8')).workspace;
+                return workspace;
+            } catch (error) {
+                throw new Error('[BpmnModeler] getWorkspace() -> ' + error);
             }
         }
 
@@ -143,28 +134,30 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             }
         });
 
-        webviewPanel.onDidChangeViewState(() => {
+        webviewPanel.onDidChangeViewState((wp) => {
             switch (true) {
-                case webviewPanel.active: {
+                case wp.webviewPanel.active: {
                     TextEditor.document = document;
                     /* falls through */
                 }
-                case webviewPanel.visible: {
+                case wp.webviewPanel.visible: {
                     if (isBuffer) {
                         updateWebview(BpmnModeler.viewType + '.updateFromExtension');
                         isBuffer = false;
                     }
+                    watcher.update(document.uri.path, wp.webviewPanel);
                     break;
                 }
             }
         });
 
         webviewPanel.onDidDispose(() => {
+            watcher.unsubscribe(document.uri.path);
             changeDocumentSubscription.dispose();
         });
     }
 
-    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: FilesContent) {
+    private getHtmlForWebview(webview: vscode.Webview, extensionUri: vscode.Uri, initialContent: string, files: FolderContent[]) {
 
         const scriptApp = webview.asWebviewUri(vscode.Uri.joinPath(
             extensionUri, 'dist', 'client', 'client.mjs'
@@ -238,7 +231,6 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         `;
     }
 
-    //     -----------------------------HELPERS-----------------------------     \\
     private getNonce(): string {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -260,8 +252,33 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.workspace.applyEdit(edit);
     }
 
-    private getProjectUri(path: string): string {
-        const filename = path.replace(/^.*[\\\/]/, '');
-        return path.substring(0, path.indexOf(filename));
+    /**
+     * Gets the URI of the currently opened project.
+     * If a workspace exists, the URI of the workspace is returned, otherwise the URI of the open document without the filename.
+     * @param document The URI of the open document
+     * @private
+     */
+    private getProjectUri(document: vscode.Uri): vscode.Uri {
+        const workspaces = vscode.workspace.workspaceFolders;
+        let documentParts = document.path.split('/');
+        documentParts = documentParts.slice(0, documentParts.length-1);
+        if (workspaces) {
+            for (const ws of workspaces) {
+                const wsParts = ws.uri.path.split('/');
+                const documentPath = documentParts.slice(0, wsParts.length).join('/');
+                if (ws.uri.path === documentPath) {
+                    return ws.uri;
+                }
+            }
+        }
+        return vscode.Uri.parse(documentParts.join('/'));
+    }
+
+    private getDefaultWorkspace(): WorkspaceFolder[] {
+        return [{
+            type: 'element-template',
+            path: "element-templates",
+            extension: ".json"
+        }];
     }
 }
