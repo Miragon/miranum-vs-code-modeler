@@ -193,7 +193,7 @@ export class Watcher {
         }
 
         const base = Uri.parse(projectPath.join('/'));
-        const pattern = '**/{' + folders + '}/*.{' + ext + '}';
+        const pattern = `**/{${folders}}/*.{${ext}}`;
 
         return new RelativePattern(base, pattern);
     }
