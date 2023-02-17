@@ -159,28 +159,45 @@ export class Watcher {
      * @private
      */
     private createGlobPattern(): RelativePattern {
+        // todo:
+        //  Changes in miranum.json should trigger a new evaluation of the watched paths
+        //  Root folder is not watched!
+
         let projectPath = this.projectUri.path.split('/');
         let folders = '';
         let ext = '';
+        let backSteps = 0;
         const extSet = new Set();  // prevent duplicates
 
         for (const [i, folder] of this.workspaceFolders.entries()) {
+            if (folder.type === 'bpmn' || folder.type === 'dmn') {
+                continue;
+            }
+
             // todo:
             //  make it windows compatible
             //  remove trailing slashes or backslashes
             const path = folder.path.split('/');
+
+            let localBackSteps = 0;
             for (const part of path) {
                 if (part === '..') {
-                    projectPath = projectPath.slice(0, projectPath.length - 1);
+                    localBackSteps++;
                 }
             }
+            backSteps = (localBackSteps > backSteps) ? localBackSteps : backSteps;
+
             extSet.add(folder.extension.substring(folder.extension.indexOf('.') + 1));
+
+            const lastItem = path.length - 1;
             if (this.workspaceFolders.length - 1 !== i) {
-                folders += path[path.length - 1] + ',';
+                folders += path[lastItem] + ',';
             } else {
-                folders += path[path.length - 1];
+                folders += path[lastItem];
             }
         }
+
+        projectPath = projectPath.slice(0, projectPath.length - backSteps);
 
         let i = 0;
         for (const value of extSet) {
