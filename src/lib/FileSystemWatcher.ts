@@ -161,7 +161,7 @@ export class Watcher {
     private createGlobPattern(): RelativePattern {
         // todo:
         //  Changes in miranum.json should trigger a new evaluation of the watched paths
-        //  Root folder is not watched!
+        //  Files at root level are not being watched!
 
         let projectPath = this.projectUri.path.split('/');
         let folders = '';
@@ -189,11 +189,10 @@ export class Watcher {
 
             extSet.add(folder.extension.substring(folder.extension.indexOf('.') + 1));
 
-            const lastItem = path.length - 1;
             if (this.workspaceFolders.length - 1 !== i) {
-                folders += path[lastItem] + ',';
+                folders += path[path.length - 1] + ',';
             } else {
-                folders += path[lastItem];
+                folders += path[path.length - 1];
             }
         }
 
