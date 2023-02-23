@@ -175,6 +175,9 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             extensionUri, 'dist', 'client', 'assets', 'bpmn-font', 'css', 'bpmn.css'
         ));
 
+        const bpmnXML = JSON.stringify(initialContent).replace(/'/g, "\\'");
+        const data = JSON.stringify(files);
+
         const nonce = this.getNonce();
 
         return `
@@ -219,9 +222,9 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
                 const vscode = acquireVsCodeApi();
                 const state = vscode.getState();
                 if (!state) {
-                    vscode.setState({
-                      text: '${JSON.stringify(initialContent)}',
-                      files: '${JSON.stringify(files)}'    // serialize files-Array
+                    vscode.setState({ 
+                      text: '${bpmnXML}',
+                      files: '${data}'   // serialize files-Array
                     });
                 }
               </script>
