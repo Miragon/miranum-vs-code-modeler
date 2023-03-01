@@ -5,6 +5,7 @@ import {FileSystemReader, Watcher, TextEditor} from "./lib";
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = 'bpmn-modeler';
+    private static counter = 0;
 
     public static register(context: vscode.ExtensionContext): vscode.Disposable {
         const provider = new BpmnModeler(context);
@@ -16,7 +17,7 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     ) {
         // Register the command for toggling the standard vscode text editor.
         TextEditor.register(context);
-        context.subscriptions.push(vscode.commands.registerCommand('bpmn-modeler.toggleTextEditor', () => {
+        context.subscriptions.push(vscode.commands.registerCommand(`${BpmnModeler.viewType}.toggleTextEditor`, () => {
                 TextEditor.toggle();
             }
         ));
@@ -37,18 +38,21 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         // Disable preview mode
         await vscode.commands.executeCommand('workbench.action.keepEditor');
 
+        // Set context for when clause in vscode commands
+        BpmnModeler.counter++;
+        vscode.commands.executeCommand('setContext', `${BpmnModeler.viewType}.openCustomEditors`, BpmnModeler.counter);
+
+        const projectUri = this.getProjectUri(document.uri);
         let isUpdateFromWebview = false;
         let isUpdateFromExtension = false;
         let isBuffer = false;
-
-        const projectUri = this.getProjectUri(document.uri);
-
         let workspaceFolder: WorkspaceFolder[];
+
         try {
             workspaceFolder = await getWorkspace();
         } catch (error) {
             workspaceFolder = this.getDefaultWorkspace();
-            console.log('miragon-gmbh.vs-code-bpmn-modeler -> ' + error);
+            console.log('[Miranum.Modeler]' + error);
         }
 
         webviewPanel.webview.options = {enableScripts: true};
@@ -152,6 +156,9 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         });
 
         webviewPanel.onDidDispose(() => {
+            BpmnModeler.counter--;
+            vscode.commands.executeCommand('setContext', `${BpmnModeler.viewType}.openCustomEditors`, BpmnModeler.counter);
+
             watcher.unsubscribe(document.uri.path);
             changeDocumentSubscription.dispose();
         });
